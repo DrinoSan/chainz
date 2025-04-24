@@ -38,6 +38,7 @@ std::string Blockchain::calculateHash( const Block& block ) const
       hexStream << std::hex << std::setw( 2 ) << std::setfill( '0' )
                 << ( int ) hash[ i ];
    }
+
    std::cout << "----hash: " << hexStream.str() << std::endl;
    return hexStream.str();
 }
@@ -124,4 +125,80 @@ std::string Blockchain::toString() const
    }
 
    return ss.str();
+}
+
+// ----------------------------------------------------------------------------
+bool Blockchain::addBlock( const Block& block )
+{
+   // Index starts at 0 means the new block.index should be equal to the current
+   // chain size
+   if ( block.index != chain.size() )
+   {
+      std::cerr << "Invalid block index" << std::endl;
+      return false;
+   }
+
+   if ( block.prevHash != chain.back().hash )
+   {
+      std::cerr << "Invalid previous hash" << std::endl;
+      return false;
+   }
+
+   if ( !isValidPoW( block.hash, 4 ) )
+   {
+      std::cerr << "Invalid proof of work" << std::endl;
+      return false;
+   }
+
+   chain.push_back( block );
+   return true;
+}
+
+// ----------------------------------------------------------------------------
+bool Blockchain::isTransactionDuplicate( const Transaction& tx ) const
+{
+   for ( const auto& pendingTx : pendingTxs )
+   {
+      if ( pendingTx == tx )
+      {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+// ----------------------------------------------------------------------------
+bool Blockchain::addToMempool( const Transaction& tx )
+{
+   if ( !isValidTransaction( tx ) || !isTransactionDuplicate( tx ) )
+   {
+      return false;
+   }
+
+   pendingTxs.push_back( tx );
+   return true;
+}
+
+// ----------------------------------------------------------------------------
+bool Blockchain::isValidTransaction( const Transaction& tx ) const
+{
+   if ( tx.sender.empty() || tx.receiver.empty() || tx.amount <= 0 )
+   {
+      return true;
+   }
+
+   return false;
+}
+
+// ----------------------------------------------------------------------------
+json Blockchain::toJson() const
+{
+   json j;
+   for ( const auto& block : chain )
+   {
+      j.push_back( block.toJson() );
+   }
+
+   return j;
 }

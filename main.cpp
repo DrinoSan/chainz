@@ -1,9 +1,21 @@
 #include <iostream>
 
 #include "Blockchain.h"
+#include "Node.h"
 
-int main()
+int main( int argc, char* argv[])
 {
+   std::string port;
+   if( argc < 2 )
+   {
+      port = "8080";
+   }
+   else
+   {
+      port = argv[1];
+   }
+
+
    Blockchain chain;
 
    chain.addTransaction( { "Alice", "Bob", 50.0, chain.getCurrentTime() } );
@@ -33,5 +45,22 @@ int main()
 
    std::cout << chain.toString() << std::endl;
 
+   std::string host = "localhost";
+   std::vector<std::string> peersDummy{ "8080", "8081", "8082" };
+   std::vector<std::string> peers;
+
+   // This should be moved into a config or request from a remote server which keeps track of peers
+   int32_t portInt = std::stoi( port );
+   std::cout << "Running on Port: " << portInt << std::endl;
+   for( auto& peer : peersDummy )
+   {
+      if( peer == port )
+         continue;
+
+      peers.push_back( "localhost:" + peer );
+      std::cout << "Added peer localhost:" + peer << std::endl;
+   }
+
+   Node node( chain, host, portInt, peers );
    return 0;
 }
