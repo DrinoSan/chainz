@@ -28,18 +28,6 @@ void from_json( const json& j, Block& b )
 }
 
 // ----------------------------------------------------------------------------
-json Block::toJsonWithoutHash() const
-{
-   json j;
-   j[ "index" ]        = index;
-   j[ "prevHash" ]     = prevHash;
-   j[ "transactions" ] = txs;
-   j[ "nonce" ]        = nonce;
-   j[ "timestamp" ]    = timestamp;
-   return j;
-}
-
-// ----------------------------------------------------------------------------
 json Block::toJson() const
 {
    json j;
@@ -50,12 +38,6 @@ json Block::toJson() const
    j[ "nonce" ]        = nonce;
    j[ "timestamp" ]    = timestamp;
    return j;
-}
-
-// ----------------------------------------------------------------------------
-std::string Block::toStringWithoutHash() const
-{
-   return toJsonWithoutHash().dump();
 }
 
 // ----------------------------------------------------------------------------

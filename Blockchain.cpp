@@ -8,6 +8,7 @@
 
 #include "Blockchain.h"
 #include "Node.h"
+#include "UTXO.h"
 
 // ----------------------------------------------------------------------------
 Blockchain::Blockchain()
@@ -159,7 +160,7 @@ bool Blockchain::addBlock( const Block& block )
 
             auto it =
                 std::find_if( utxoSet.begin(), utxoSet.end(),
-                              [ & ]( const UTXO& u ) {
+                              [ & ]( const utxo::UTXO& u ) {
                                  return u.txid == input.txid &&
                                         u.outputIndex == input.outputIndex;
                               } );
@@ -196,7 +197,7 @@ bool Blockchain::addBlock( const Block& block )
       for ( const auto& input : tx.inputs )
       {
          auto it = std::find_if( utxoSet.begin(), utxoSet.end(),
-                                 [ & ]( const UTXO& u ) {
+                                 [ & ]( const utxo::UTXO& u ) {
                                     return u.txid == input.txid &&
                                            u.outputIndex == input.outputIndex;
                                  } );
@@ -210,6 +211,9 @@ bool Blockchain::addBlock( const Block& block )
       // Add new UTXOs
       for ( size_t i = 0; i < tx.outputs.size(); ++i )
       {
+         //std::cout << "Adding UTXO: txid=" << tx.txid << ", index=" << i
+         //          << ", amount=" << tx.outputs[ i ].amount
+         //          << ", address=" << tx.outputs[ i ].address << std::endl;
          utxoSet.push_back( { tx.txid, static_cast<int>( i ),
                               tx.outputs[ i ].amount,
                               tx.outputs[ i ].address } );
@@ -334,7 +338,7 @@ bool Blockchain::isValidTransaction( const Transaction& tx ) const
    {
       // Verify UTXO exists in utxoSet
       auto it = std::find_if( utxoSet.begin(), utxoSet.end(),
-                              [ & ]( const UTXO& u ) {
+                              [ & ]( const utxo::UTXO& u ) {
                                  return u.txid == input.txid &&
                                         u.outputIndex == input.outputIndex;
                               } );
@@ -397,15 +401,36 @@ Block Blockchain::minePendingTransactions( std::string& minerAddress )
    block.timestamp = getCurrentTime();
    block.txs       = selectTransactions( 10 );
 
+   double totalFees = 0.0;
+   for ( const auto& tx : block.txs )
+   {
+      if ( !tx.isReward )
+      {
+         totalFees += tx.fee;
+      }
+   }
+
+   auto now = std::chrono::system_clock::now();
+
+   // Convert the current time to time since epoch
+   auto duration = now.time_since_epoch();
+
+   // Convert duration to milliseconds
+   auto milliseconds =
+       std::chrono::duration_cast<std::chrono::milliseconds>( duration )
+           .count();
+
    // Node which successfully mines a block gets a isReward
    Transaction reward;
    reward.sender    = "network";
    reward.receiver  = minerAddress;
    reward.amount    = 10.0;
    reward.isReward  = true;
+   reward.fee       = 0;
    reward.timestamp = getCurrentTime();
-   reward.txid      = "reward_" + std::to_string( block.index );
-   reward.outputs.push_back( { minerAddress, 10.0 } );
+   reward.txid      = "reward_blockIDX_" + std::to_string( block.index ) + "_" +
+                 std::to_string( milliseconds );
+   reward.outputs.push_back( { minerAddress, 10.0 + totalFees } );
    block.txs.insert( block.txs.begin(), reward );
 
    mineBlock( block, 4 );
@@ -486,12 +511,6 @@ std::vector<Transaction> Blockchain::selectTransactions( size_t max )
                                      { return tx.isReward == true; } ),
                      pendingTxs.end() );
 
-   std::cout << "Selected size: " << selected.size() << std::endl;
-   if ( selected.size() > 0 )
-   {
-      std::cout << "Selected tx info Sender: " << selected[ 0 ].sender
-                << " Receiver: " << selected[ 0 ].receiver << std::endl;
-   }
    return selected;
 }
 
@@ -508,10 +527,10 @@ json Blockchain::toJson() const
 }
 
 // ----------------------------------------------------------------------------
-std::vector<UTXO>
+std::vector<utxo::UTXO>
 Blockchain::getUTXOsForAddress( const std::string& address ) const
 {
-   std::vector<UTXO> utxoForAddress;
+   std::vector<utxo::UTXO> utxoForAddress;
    for ( const auto& utxo : utxoSet )
    {
       if ( utxo.address == address )

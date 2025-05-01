@@ -8,18 +8,10 @@
 
 // Project
 #include "Transaction.h"
+#include "UTXO.h"
 
 // for convenience
 using json = nlohmann::json;
-
-// UTXO structure
-struct UTXO
-{
-   std::string txid;          // Transaction ID
-   int         outputIndex;   // Output index in transaction
-   double      amount;        // Amount in tokens
-   std::string address;       // Owner address
-};
 
 // ----------------------------------------------------------------------------
 class Block
@@ -29,7 +21,6 @@ class Block
 
    // ----------------------------------------------------------------------------
    json         toJson() const;
-   std::string  toStringWithoutHash() const;
    std::string  toString() const;
    json         toJsonWithoutHash() const;
    static Block fromJson( const json& j );

@@ -23,13 +23,3 @@ void Node::broadcastTransaction( const Transaction& tx ) const
       cli.Post( "/tx", tx.toJson().dump(), "application/json" );
    }
 }
-
-// ----------------------------------------------------------------------------
-void Node::showChain() const
-{
-   for ( const auto& block : bc.chain )
-   {
-      //std::cout << block.toJson().dump( 4 ) << std::endl;
-      std::cout << block.toJson().dump( 4 ) << std::endl;
-   }
-}

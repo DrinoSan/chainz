@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "Transaction.h"
 #include "Block.h"
+#include "Transaction.h"
 
 // ----------------------------------------------------------------------------
 Transaction Transaction::fromJson( const json& j )
@@ -34,27 +34,28 @@ json Transaction::toJson() const
 }
 
 // ----------------------------------------------------------------------------
-void to_json( json& j, const Transaction& b )
+void to_json( json& j, const Transaction& t )
 {
-   j = json{ { "sender", b.sender },
-             { "receiver", b.receiver },
-             { "amount", b.amount },
-             { "timestamp", b.timestamp } };
+   j = json{ { "sender", t.sender },
+             { "receiver", t.receiver },
+             { "amount", t.amount },
+             { "fee", t.fee },
+             { "timestamp", t.timestamp } };
 }
 
 // ----------------------------------------------------------------------------
-void from_json( const json& j, Transaction& b )
+void from_json( const json& j, Transaction& t )
 {
-   j.at( "sender" ).get_to( b.sender );
-   j.at( "receiver" ).get_to( b.receiver );
-   j.at( "amount" ).get_to( b.amount );
-   j.at( "timestamp" ).get_to( b.timestamp );
+   j.at( "sender" ).get_to( t.sender );
+   j.at( "receiver" ).get_to( t.receiver );
+   j.at( "amount" ).get_to( t.amount );
+   j.at( "timestamp" ).get_to( t.timestamp );
 }
 
 // ----------------------------------------------------------------------------
 Transaction Transaction::createTransaction(
     const std::string& senderAddr, const std::string& receiverAddr,
-    double amount, double fee, const std::vector<UTXO>& availableUtxos,
+    double amount, double fee, const std::vector<utxo::UTXO>& availableUtxos,
     const std::string& privateKey )
 {
    Transaction tx;
@@ -62,8 +63,8 @@ Transaction Transaction::createTransaction(
 
    // Get UTXO for senderAddr
    // Node needs to remove unspent utxos later on
-   std::vector<UTXO> unspentUTXO;
-   int32_t           utxoAmountAccum{};
+   std::vector<utxo::UTXO> unspentUTXO;
+   int32_t                 utxoAmountAccum{};
    for ( const auto& utxo : availableUtxos )
    {
       if ( utxo.address == senderAddr )
@@ -91,13 +92,22 @@ Transaction Transaction::createTransaction(
 
    tx.outputs.push_back( { receiverAddr, amount } );
 
-   std::time_t now = std::time( nullptr );
-   tx.txid         = senderAddr + std::ctime( &now );
+   auto now = std::chrono::system_clock::now();
+
+   // Convert the current time to time since epoch
+   auto duration = now.time_since_epoch();
+
+   // Convert duration to milliseconds
+   auto milliseconds =
+       std::chrono::duration_cast<std::chrono::milliseconds>( duration ).count();
+
+   tx.txid         = senderAddr + std::to_string( milliseconds );
    tx.sender       = senderAddr;
    tx.receiver     = receiverAddr;
+   tx.fee          = fee;
    tx.amount       = amount;
    tx.isReward     = false;
-   tx.timestamp    = std::ctime( &now );
+   tx.timestamp    = std::to_string( milliseconds );
 
    return tx;
 }

@@ -27,10 +27,10 @@ class Blockchain
    bool  isChainValid() const;
    Block minePendingTransactions( std::string& minerAddress );
 
-   std::vector<UTXO> getUTXOsForAddress( const std::string& address ) const;
+   std::vector<utxo::UTXO> getUTXOsForAddress( const std::string& address ) const;
 
  public:
-   std::vector<UTXO>  utxoSet;
+   std::vector<utxo::UTXO>  utxoSet;
    std::vector<Block> chain;
 
  private:

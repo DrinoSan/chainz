@@ -34,24 +34,23 @@ int main( int argc, char* argv[] )
    chain.minePendingTransactions( nodeAddress );
 
    std::string nodeSignature = nodeAddress + "_SIG";
+   ///////////////
    auto tx = Transaction::createTransaction( nodeAddress, "AliceAddr", 5, 1,
                                              chain.utxoSet, nodeSignature );
    chain.addTransaction( tx );
-   auto tx1 = Transaction::createTransaction( nodeAddress, "AliceAddr1", 5, 1,
-                                              chain.utxoSet, nodeSignature );
-   chain.addTransaction( tx1 );
-   auto tx2 = Transaction::createTransaction( nodeAddress, "AliceAddr2", 5, 1,
-                                              chain.utxoSet, nodeSignature );
-   chain.addTransaction( tx2 );
-   auto tx3 = Transaction::createTransaction( nodeAddress, "AliceAddr3", 5, 1,
-                                              chain.utxoSet, nodeSignature );
-   chain.addTransaction( tx3 );
+   std::cout << "Mining new block...\n";
+   chain.minePendingTransactions( nodeAddress );
+   ///////////////
+
+
+   sleep(5);
+   ///////////////
    auto tx4 = Transaction::createTransaction( nodeAddress, "AliceAddr4", 5, 1,
                                               chain.utxoSet, nodeSignature );
    chain.addTransaction( tx4 );
-
    std::cout << "Mining new block...\n";
    chain.minePendingTransactions( nodeAddress );
+   ///////////////
 
    if ( chain.isChainValid() )
    {

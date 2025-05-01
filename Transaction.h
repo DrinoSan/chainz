@@ -3,12 +3,11 @@
 #include <string>
 #include <vector>
 
+#include "UTXO.h"
 #include "json/json.hpp"
 
 // for convenience
 using json = nlohmann::json;
-
-struct UTXO;
 
 // ----------------------------------------------------------------------------
 // Input structure
@@ -43,7 +42,7 @@ class Transaction
    static Transaction
    createTransaction( const std::string& senderAddr,
                       const std::string& receiverAddr, double amount,
-                      double fee, const std::vector<UTXO>& availableUtxos,
+                      double fee, const std::vector<utxo::UTXO>& availableUtxos,
                       const std::string& privateKey );
 
  public:
@@ -54,6 +53,7 @@ class Transaction
    std::string         receiver;
    double              amount;
    std::string         timestamp;
+   double              fee;
    bool                isReward = false;
 };
 

@@ -1,7 +1,10 @@
+#pragma once
+
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
+#include "Block.h"
 #include "Blockchain.h"
 #include "vendor/Server.h"
 
@@ -21,9 +24,8 @@ class Node
                       auto        txJson = json::parse( req.body );
                       Transaction tx     = Transaction::fromJson( txJson );
 
-
                       // Mempool holds pending transactions
-                      if( bc.addToMempool( tx ) )
+                      if ( bc.addToMempool( tx ) )
                       {
                          std::cout << "Got Req: " << txJson.dump() << "\n";
 
@@ -33,7 +35,8 @@ class Node
                       }
                       else
                       {
-                         res.set_content( "Transaction Duplicate", "text/plain" );
+                         res.set_content( "Transaction Duplicate",
+                                          "text/plain" );
                       }
                    }
                    catch ( const std::exception& e )
@@ -76,13 +79,26 @@ class Node
                   res.set_content( j.dump( 4 ), "application/json" );
                } );
 
+      // Needed for Transaction creation in client
+      svr.Get( "/utxo",
+               [ this ]( const httplib::Request&, httplib::Response& res )
+               {
+                  nlohmann::json j = nlohmann::json::array();
+                  for ( const auto& u : bc.utxoSet )
+                  {
+                     nlohmann::json uj;
+                     utxo::to_json( uj, u );
+                     j.push_back( uj );
+                  }
+
+                  res.set_content( j.dump( 4 ), "application/json" );
+               } );
+
       svr.listen( host.c_str(), port );
    }
 
    void broadcastBlock( const Block& block ) const;
    void broadcastTransaction( const Transaction& tx ) const;
-
-   void showChain() const;
 
  private:
    Blockchain&              bc;
