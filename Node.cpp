@@ -3,6 +3,8 @@
 // ----------------------------------------------------------------------------
 void Node::broadcastBlock( const Block& block ) const
 {
+   std::cout << "Broadcasting Block\n";
+
    for ( const auto& peer : peers )
    {
       httplib::Client cli( peer.c_str() );
@@ -13,6 +15,8 @@ void Node::broadcastBlock( const Block& block ) const
 // ----------------------------------------------------------------------------
 void Node::broadcastTransaction( const Transaction& tx ) const
 {
+   std::cout << "Broadcasting tx\n";
+
    for ( const auto& peer : peers )
    {
       httplib::Client cli( peer.c_str() );
@@ -25,6 +29,7 @@ void Node::showChain() const
 {
    for ( const auto& block : bc.chain )
    {
+      //std::cout << block.toJson().dump( 4 ) << std::endl;
       std::cout << block.toJson().dump( 4 ) << std::endl;
    }
 }

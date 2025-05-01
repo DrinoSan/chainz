@@ -51,9 +51,9 @@ AlreadyReported_208	vendor/Server.h	462
 BadGateway_502	vendor/Server.h	510
 BadRequest_400	vendor/Server.h	477
 BindIPAddress	vendor/Server.h	1166
-Block	Data.h	38
+Block	Block.h	25
 Blockchain	Blockchain.cpp	/^Blockchain::Blockchain()$/
-Blockchain	Blockchain.h	8
+Blockchain	Blockchain.h	9
 Brotli	vendor/Server.h	2455
 CFObjectPtr	vendor/Server.h	5622
 COMPILER_ID	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	19
@@ -406,6 +406,7 @@ HttpVersionNotSupported_505	vendor/Server.h	513
 IMUsed_226	vendor/Server.h	463
 INVALID_SOCKET	vendor/Server.h	231
 ImATeapot_418	vendor/Server.h	495
+Input	Transaction.h	14
 InsufficientStorage_507	vendor/Server.h	515
 InternalServerError_500	vendor/Server.h	508
 LengthRequired_411	vendor/Server.h	488
@@ -419,7 +420,7 @@ MatcherBase	vendor/Server.h	879
 MatcherBase	vendor/Server.h	/^class RegexMatcher final : public MatcherBase {$/
 MethodNotAllowed_405	vendor/Server.h	482
 MisdirectedRequest_421	vendor/Server.h	496
-Mmain.cpp	main.cpp	/^int main()$/
+Mmain.cpp	main.cpp	/^int main( int argc, char* argv[])$/
 MountPointEntry	vendor/Server.h	1123
 MovedPermanently_301	vendor/Server.h	467
 MultiStatus_207	vendor/Server.h	461
@@ -452,6 +453,7 @@ Options	vendor/Server.h	/^inline Result ClientImpl::Options(const std::strin/
 Options	vendor/Server.h	/^inline Result ClientImpl::Options(const std::strin/
 Options	vendor/Server.h	/^inline Result Client::Options(const std::string &p/
 Options	vendor/Server.h	/^inline Result Client::Options(const std::string &p/
+Output	Transaction.h	24
 PKCS7_SIGNER_INFO	vendor/Server.h	273
 PLATFORM_ID	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	452
 PLATFORM_ID	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	455
@@ -692,9 +694,10 @@ TaskQueue	vendor/Server.h	/^class ThreadPool final : public TaskQueue {$/
 TemporaryRedirect_307	vendor/Server.h	473
 TooEarly_425	vendor/Server.h	500
 TooManyRequests_429	vendor/Server.h	503
-Transaction	Data.h	12
+Transaction	Transaction.h	31
 U	vendor/Server.h	9105
 USE_IF2IP	vendor/Server.h	3705
+UTXO	Block.h	16
 Unauthorized_401	vendor/Server.h	478
 UnavailableForLegalReasons_451	vendor/Server.h	505
 Unhandled	vendor/Server.h	957
@@ -723,10 +726,15 @@ addTransaction	Blockchain.cpp	/^void Blockchain::addTransaction( const Transacti
 add_certs_to_x509_store	vendor/Server.h	/^inline bool add_certs_to_x509_store(CFArrayRef cer/
 addr_	vendor/Server.h	2637
 addr_map_	vendor/Server.h	1548
+address	Block.h	21
+address	Transaction.h	26
 address_family_	vendor/Server.h	1152
 address_family_	vendor/Server.h	1582
 adjust_host_string	vendor/Server.h	/^ClientImpl::adjust_host_string(const std::string &/
-amount	Data.h	33
+amount	Block.h	20
+amount	Transaction.h	18
+amount	Transaction.h	27
+amount	Transaction.h	54
 append	vendor/Server.h	/^inline void stream_line_reader::append(char c) {$/
 append_query_params	vendor/Server.h	/^inline std::string append_query_params(const std::/
 apply_ranges	vendor/Server.h	/^inline void Server::apply_ranges(const Request &re/
@@ -736,7 +744,7 @@ base_dir	vendor/Server.h	1125
 base_dirs_	vendor/Server.h	1128
 basic_auth_password_	vendor/Server.h	1570
 basic_auth_username_	vendor/Server.h	1569
-bc	Node.h	79
+bc	Node.h	88
 bearer_token_auth_token_	vendor/Server.h	1571
 bind_internal	vendor/Server.h	/^inline int Server::bind_internal(const std::string/
 bind_ip_address	vendor/Server.h	/^inline bool bind_ip_address(socket_t sock, const s/
@@ -763,12 +771,11 @@ ca_cert_dir_path_	vendor/Server.h	1605
 ca_cert_file_path_	vendor/Server.h	1604
 ca_cert_store_	vendor/Server.h	1607
 calc_actual_timeout	vendor/Server.h	/^inline void calc_actual_timeout(time_t max_timeout/
-calculateHash	Blockchain.cpp	/^std::string Blockchain::calculateHash( const Block/
-calculateHash	Data.cpp	/^void Block::calculateHash()$/
+calculateHash	Block.cpp	/^std::string Block::calculateHash() const$/
 can_compress_content_type	vendor/Server.h	/^inline bool can_compress_content_type(const std::s/
 case_ignore	vendor/Server.h	350
 cf_object_ptr_deleter	vendor/Server.h	/^inline void cf_object_ptr_deleter(CFTypeRef obj) {/
-chain	Blockchain.h	28
+chain	Blockchain.h	29
 check_host_name	vendor/Server.h	/^inline bool SSLClient::check_host_name(const char /
 clear_file_info	vendor/Server.h	/^  void clear_file_info() {$/
 cli_	vendor/Server.h	1946
@@ -880,12 +887,12 @@ fixed_buffer_	vendor/Server.h	2611
 fixed_buffer_size_	vendor/Server.h	2612
 fixed_buffer_used_size_	vendor/Server.h	2613
 follow_location_	vendor/Server.h	1578
-fromJson	Data.h	/^   static Transaction fromJson( const json& j )$/
-fromJson	Data.h	/^   static Block fromJson( const json& j )$/
+fromJson	Block.cpp	/^Block Block::fromJson( const json& j )$/
+fromJson	Transaction.cpp	/^Transaction Transaction::fromJson( const json& j )/
 from_hex_to_i	vendor/Server.h	/^inline bool from_hex_to_i(const std::string &s, si/
 from_i_to_hex	vendor/Server.h	/^inline std::string from_i_to_hex(size_t n) {$/
-from_json	Data.cpp	/^void from_json( const json& j, Transaction& b )$/
-from_json	Data.cpp	/^void from_json( const json& j, Block& b )$/
+from_json	Block.cpp	/^void from_json( const json& j, Block& b )$/
+from_json	Transaction.cpp	/^void from_json( const json& j, Transaction& b )$/
 getCurrentTime	Blockchain.cpp	/^std::string Blockchain::getCurrentTime() const$/
 get_bearer_token_auth	vendor/Server.h	/^inline std::string get_bearer_token_auth(const Req/
 get_buffer	vendor/Server.h	/^inline const std::string &BufferStream::get_buffer/
@@ -936,7 +943,7 @@ has_header	vendor/Server.h	/^inline bool Request::has_header(const std::string /
 has_header	vendor/Server.h	/^inline bool Response::has_header(const std::string/
 has_param	vendor/Server.h	/^inline bool Request::has_param(const std::string &/
 has_request_header	vendor/Server.h	/^inline bool Result::has_request_header(const std::/
-hash	Data.h	70
+hash	Block.h	42
 hash	vendor/Server.h	389
 hash_core	vendor/Server.h	/^  size_t hash_core(const char *s, size_t l, size_t/
 header_writer_	vendor/Server.h	1158
@@ -953,7 +960,7 @@ hosted_at	vendor/Server.h	/^inline void hosted_at(const std::string &hostname,/
 idle_interval_sec_	vendor/Server.h	1062
 idle_interval_usec_	vendor/Server.h	1063
 if2ip	vendor/Server.h	/^inline std::string if2ip(int address_family, const/
-index	Data.h	68
+index	Block.h	40
 info_arch	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	805
 info_compiler	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	434
 info_cray	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	444
@@ -967,10 +974,13 @@ info_version	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	755
 info_version_internal	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	773
 info_version_internal	build/CMakeFiles/3.31.5/CompilerIdCXX/CMakeCXXCompilerId.cpp	779
 initialize_ssl	vendor/Server.h	/^inline bool SSLClient::initialize_ssl(Socket &sock/
+inputs	Transaction.h	50
 interface_	vendor/Server.h	1590
 ipv6_v6only_	vendor/Server.h	1154
 ipv6_v6only_	vendor/Server.h	1584
 isChainValid	Blockchain.cpp	/^bool Blockchain::isChainValid() const$/
+isReward	Transaction.h	56
+isTransactionDuplicate	Blockchain.cpp	/^bool Blockchain::isTransactionDuplicate( const Tra/
 isValidPoW	Blockchain.cpp	/^bool Blockchain::isValidPoW( const std::string& ha/
 isValidTransaction	Blockchain.cpp	/^bool Blockchain::isValidTransaction( const Transac/
 is_chunked_content_provider_	vendor/Server.h	678
@@ -1020,7 +1030,8 @@ is_valid_	vendor/Server.h	5138
 is_valid_	vendor/Server.h	5724
 is_valid_path	vendor/Server.h	/^inline bool is_valid_path(const std::string &path)/
 is_vchar	vendor/Server.h	/^inline bool is_vchar(char c) { return c >= 33 && c/
-json	Data.h	9
+json	Block.h	13
+json	Transaction.h	10
 keep_alive	vendor/Server.h	/^inline bool keep_alive(const std::atomic<socket_t>/
 keep_alive_	vendor/Server.h	1577
 keep_alive_max_count_	vendor/Server.h	1056
@@ -1055,6 +1066,7 @@ message_digest	vendor/Server.h	/^inline std::string message_digest(const std::st
 method	vendor/Server.h	628
 mineBlock	Blockchain.cpp	/^void Blockchain::mineBlock( Block& block, int diff/
 mineBlock	Blockchain.cpp	/^void Blockchain::mineBlock()$/
+minePendingTransactions	Blockchain.cpp	/^void Blockchain::minePendingTransactions( std::str/
 mmap	vendor/Server.h	2617
 mmap	vendor/Server.h	/^inline mmap::mmap(const char *path) { open(path); /
 mount_point	vendor/Server.h	1124
@@ -1062,7 +1074,7 @@ multipart_reader_	vendor/Server.h	621
 name	vendor/Server.h	534
 name	vendor/Server.h	584
 nfds_t	vendor/Server.h	198
-nonce	Data.h	72
+nonce	Block.h	44
 on_idle	vendor/Server.h	/^  virtual void on_idle() {}$/
 open	vendor/Server.h	/^inline bool mmap::open(const char *path) {$/
 operator bool	vendor/Server.h	/^  operator bool() const { return res_ != nullptr; /
@@ -1079,9 +1091,13 @@ operator*	vendor/Server.h	/^  Response &operator*() { return *res_; }$/
 operator->	vendor/Server.h	/^  const Response *operator->() const { return res_/
 operator->	vendor/Server.h	/^  Response *operator->() { return res_.get(); }$/
 operator<<	vendor/Server.h	/^inline std::ostream &operator<<(std::ostream &os, /
+operator==	Transaction.cpp	/^bool Transaction::operator==( const Transaction& o/
 operator==	vendor/Server.h	/^  bool operator==(std::nullptr_t) const { return r/
 options_handlers_	vendor/Server.h	1142
 os	vendor/Server.h	555
+outputIndex	Block.h	19
+outputIndex	Transaction.h	17
+outputs	Transaction.h	51
 params	vendor/Server.h	630
 params_to_query_str	vendor/Server.h	/^inline std::string params_to_query_str(const Param/
 parse	vendor/Server.h	/^  bool parse(const char *buf, size_t n, const Cont/
@@ -1098,8 +1114,9 @@ patch_handlers_for_content_reader_	vendor/Server.h	1139
 path	vendor/Server.h	629
 path_params	vendor/Server.h	645
 payload_max_length_	vendor/Server.h	1064
-peers	Node.h	81
-pendingTxs	Blockchain.h	31
+peers	Node.h	/^       : bc{ bc_ }, peers{ std::move( peers_ ) }$/
+peers	Node.h	90
+pendingTxs	Blockchain.h	40
 poll_wrapper	vendor/Server.h	/^inline int poll_wrapper(struct pollfd *fds, nfds_t/
 pool_	vendor/Server.h	843
 port	vendor/Server.h	/^inline int ClientImpl::port() const { return port_/
@@ -1110,7 +1127,7 @@ post_handlers_for_content_reader_	vendor/Server.h	1135
 post_routing_handler_	vendor/Server.h	1147
 pre_routing_handler_	vendor/Server.h	1146
 prepare_content_receiver	vendor/Server.h	/^bool prepare_content_receiver(T &x, int &status,$/
-prevHash	Data.h	69
+prevHash	Block.h	41
 process_and_close_socket	vendor/Server.h	/^inline bool Server::process_and_close_socket(socke/
 process_and_close_socket	vendor/Server.h	/^inline bool SSLServer::process_and_close_socket(so/
 process_client_socket	vendor/Server.h	/^inline bool process_client_socket($/
@@ -1158,7 +1175,7 @@ read_timeout_usec_	vendor/Server.h	1059
 read_timeout_usec_	vendor/Server.h	1564
 reader_	vendor/Server.h	620
 reason	vendor/Server.h	687
-receiver	Data.h	32
+receiver	Transaction.h	53
 redirect	vendor/Server.h	/^inline bool redirect(T &cli, Request &req, Respons/
 redirect	vendor/Server.h	/^inline bool ClientImpl::redirect(Request &req, Res/
 redirect_count_	vendor/Server.h	675
@@ -1178,6 +1195,7 @@ sb_	vendor/Server.h	572
 scope_exit	vendor/Server.h	410
 scope_exit	vendor/Server.h	/^  explicit scope_exit(std::function<void(void)> &&/
 scope_exit	vendor/Server.h	/^  scope_exit(scope_exit &&rhs) noexcept$/
+selectTransactions	Blockchain.cpp	/^std::vector<Transaction> Blockchain::selectTransac/
 select_impl	vendor/Server.h	/^inline ssize_t select_impl(socket_t sock, time_t s/
 select_read	vendor/Server.h	/^inline ssize_t select_read(socket_t sock, time_t s/
 select_write	vendor/Server.h	/^inline ssize_t select_write(socket_t sock, time_t /
@@ -1190,7 +1208,7 @@ send_	vendor/Server.h	/^inline Result ClientImpl::send_(Request &&req) {$/
 send_socket	vendor/Server.h	/^inline ssize_t send_socket(socket_t sock, const vo/
 send_with_content_provider	vendor/Server.h	/^inline std::unique_ptr<Response> ClientImpl::send_/
 send_with_content_provider	vendor/Server.h	/^inline Result ClientImpl::send_with_content_provid/
-sender	Data.h	31
+sender	Transaction.h	52
 serialize_multipart_formdata	vendor/Server.h	/^serialize_multipart_formdata(const MultipartFormDa/
 serialize_multipart_formdata_finish	vendor/Server.h	/^serialize_multipart_formdata_finish(const std::str/
 serialize_multipart_formdata_get_content_type	vendor/Server.h	/^serialize_multipart_formdata_get_content_type(cons/
@@ -1312,6 +1330,7 @@ shutdown_socket	vendor/Server.h	/^inline void ClientImpl::shutdown_socket(Socket
 shutdown_ssl	vendor/Server.h	/^inline void ClientImpl::shutdown_ssl(Socket & \/*so/
 shutdown_ssl	vendor/Server.h	/^inline void SSLClient::shutdown_ssl(Socket &socket/
 shutdown_ssl_impl	vendor/Server.h	/^inline void SSLClient::shutdown_ssl_impl(Socket &s/
+signature	Transaction.h	19
 size	vendor/Server.h	/^inline size_t stream_line_reader::size() const {$/
 size	vendor/Server.h	/^inline size_t mmap::size() const { return size_; }/
 size_	vendor/Server.h	2636
@@ -1364,34 +1383,39 @@ str_len	vendor/Server.h	/^template <size_t N> inline constexpr size_t str_le/
 stream_line_reader	vendor/Server.h	2598
 stream_line_reader::stream_line_reader	vendor/Server.h	/^inline stream_line_reader::stream_line_reader(Stre/
 strm_	vendor/Server.h	2610
-svr	Node.h	80
+svr	Node.h	89
 svr_sock_	vendor/Server.h	1055
 target	vendor/Server.h	641
 tcp_nodelay_	vendor/Server.h	1153
 tcp_nodelay_	vendor/Server.h	1583
-timestamp	Data.h	34
-timestamp	Data.h	73
+timestamp	Block.h	45
+timestamp	Transaction.h	55
+toJson	Block.cpp	/^json Block::toJson() const$/
 toJson	Blockchain.cpp	/^json Blockchain::toJson() const$/
-toJson	Data.cpp	/^json Block::toJson() const$/
-toJson	Data.cpp	/^json Transaction::toJson() const$/
-toJsonWithoutHash	Data.cpp	/^json Block::toJsonWithoutHash() const$/
+toJson	Transaction.cpp	/^json Transaction::toJson() const$/
+toJsonWithoutHash	Block.cpp	/^json Block::toJsonWithoutHash() const$/
+toString	Block.cpp	/^std::string Block::toString() const$/
 toString	Blockchain.cpp	/^std::string Blockchain::toString() const$/
-toStringWithoutHash	Data.cpp	/^std::string Block::toStringWithoutHash() const$/
-to_json	Data.cpp	/^void to_json( json& j, const Transaction& b )$/
-to_json	Data.cpp	/^void to_json( json& j, const Block& b )$/
+toStringWithoutHash	Block.cpp	/^std::string Block::toStringWithoutHash() const$/
+to_json	Block.cpp	/^void to_json( json& j, const Block& b )$/
+to_json	Transaction.cpp	/^void to_json( json& j, const Transaction& b )$/
 to_lower	vendor/Server.h	/^inline unsigned char to_lower(int c) {$/
 to_string	vendor/Server.h	/^inline std::string to_string(const Error error) {$/
 to_utf8	vendor/Server.h	/^inline size_t to_utf8(int code, char *buff) {$/
 trim	vendor/Server.h	/^inline std::pair<size_t, size_t> trim(const char */
 trim_copy	vendor/Server.h	/^inline std::string trim_copy(const std::string &s)/
 trim_double_quotes_copy	vendor/Server.h	/^inline std::string trim_double_quotes_copy(const s/
-txs	Data.h	71
+txid	Block.h	18
+txid	Transaction.h	16
+txid	Transaction.h	49
+txs	Block.h	43
 u8string_to_wstring	vendor/Server.h	/^inline std::wstring u8string_to_wstring(const char/
 udl	vendor/Server.h	3880
 unescape_abstract_namespace_unix_domain	vendor/Server.h	/^unescape_abstract_namespace_unix_domain(const std:/
 unused_306	vendor/Server.h	472
 update_certs	vendor/Server.h	/^inline void SSLServer::update_certs(X509 *cert, EV/
 url_encode_	vendor/Server.h	1580
+utxoSet	Blockchain.h	41
 value	vendor/Server.h	/^  const Response &value() const { return *res_; }$/
 value	vendor/Server.h	/^  Response &value() { return *res_; }$/
 verify_host	vendor/Server.h	/^inline bool SSLClient::verify_host(X509 *server_ce/

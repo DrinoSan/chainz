@@ -12,35 +12,30 @@
 // for convenience
 using json = nlohmann::json;
 
+// UTXO structure
+struct UTXO
+{
+   std::string txid;          // Transaction ID
+   int         outputIndex;   // Output index in transaction
+   double      amount;        // Amount in tokens
+   std::string address;       // Owner address
+};
+
 // ----------------------------------------------------------------------------
 class Block
 {
  public:
    Block() = default;
 
-   json        toJson() const;
-   std::string toStringWithoutHash() const;
-   json        toJsonWithoutHash() const;
-   void        calculateHash();
+   // ----------------------------------------------------------------------------
+   json         toJson() const;
+   std::string  toStringWithoutHash() const;
+   std::string  toString() const;
+   json         toJsonWithoutHash() const;
+   static Block fromJson( const json& j );
 
    // ----------------------------------------------------------------------------
-   static Block fromJson( const json& j )
-   {
-      Block b;
-      j.at( "index" ).get_to( b.index );
-      j.at( "prevHash" ).get_to( b.prevHash );
-      j.at( "hash" ).get_to( b.hash );
-      j.at( "nonce" ).get_to( b.nonce );
-      j.at( "timestamp" ).get_to( b.timestamp );
-
-      for( const auto& txJson : j.at( "transactions" ) )
-      {
-         Transaction tx = Transaction::fromJson( txJson );
-         b.txs.push_back( tx );
-      }
-
-      return b;
-   }
+   std::string calculateHash() const;
 
    int32_t                  index;
    std::string              prevHash;

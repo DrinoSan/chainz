@@ -21,13 +21,20 @@ class Node
                       auto        txJson = json::parse( req.body );
                       Transaction tx     = Transaction::fromJson( txJson );
 
-                      std::cout << "Got Req: " << txJson.dump() << "\n";
 
                       // Mempool holds pending transactions
-                      bc.addToMempool( tx );
-                      broadcastTransaction( tx );
+                      if( bc.addToMempool( tx ) )
+                      {
+                         std::cout << "Got Req: " << txJson.dump() << "\n";
 
-                      res.set_content( "OK", "text/plain" );
+                         broadcastTransaction( tx );
+
+                         res.set_content( "OK", "text/plain" );
+                      }
+                      else
+                      {
+                         res.set_content( "Transaction Duplicate", "text/plain" );
+                      }
                    }
                    catch ( const std::exception& e )
                    {
