@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <mutex>
+#include <vector>
 
 #include "Block.h"
 #include "Transaction.h"
@@ -30,6 +30,7 @@ class Blockchain
    std::vector<UTXO> getUTXOsForAddress( const std::string& address ) const;
 
  public:
+   std::vector<UTXO>  utxoSet;
    std::vector<Block> chain;
 
  private:
@@ -43,5 +44,4 @@ class Blockchain
 
  private:
    std::vector<Transaction> pendingTxs;   // TODO rename to memPool
-   std::vector<UTXO>        utxoSet;
 };

@@ -24,6 +24,14 @@ Blockchain::Blockchain()
 // ----------------------------------------------------------------------------
 void Blockchain::addTransaction( const Transaction& tx )
 {
+   if ( !isValidTransaction( tx ) )
+   {
+      std::cerr << "Invalid regular transaction found, block will not be added"
+                << std::endl;
+
+      return;
+   }
+
    pendingTxs.push_back( tx );
 }
 
@@ -117,6 +125,8 @@ bool Blockchain::addBlock( const Block& block )
 {
    int32_t rewardCount{};
    double  totalFees;
+
+   std::set<std::pair<std::string, int>> usedUTXOs;
    for ( const auto& tx : block.txs )
    {
       if ( tx.isReward )
@@ -124,9 +134,6 @@ bool Blockchain::addBlock( const Block& block )
          ++rewardCount;
          if ( rewardCount > 1 || tx.amount != 10 || tx.sender != "network" )
          {
-            std::cout << "RewardCount: "<<rewardCount << ::std::endl;
-            std::cout << "tx.amount: "<<tx.amount << ::std::endl;
-            std::cout << "tx.sender: "<<tx.sender << ::std::endl;
             std::cerr << "Invalid isReward transaction identified, block will "
                          "not be added"
                       << std::endl;
@@ -138,18 +145,18 @@ bool Blockchain::addBlock( const Block& block )
       }
       else
       {
-         if ( !isValidTransaction( tx ) )
-         {
-            std::cerr
-                << "Invalid regular transaction found, block will not be added"
-                << std::endl;
-            return false;
-         }
-
          // Validate regular transaction
          double inputSum = 0;
          for ( const auto& input : tx.inputs )
          {
+            auto utxoKey = std::make_pair( input.txid, input.outputIndex );
+            if ( usedUTXOs.find( utxoKey ) != usedUTXOs.end() )
+            {
+               std::cerr
+                   << "Double-spend attempt: UTXO already used in this block\n";
+               return false;
+            }
+
             auto it =
                 std::find_if( utxoSet.begin(), utxoSet.end(),
                               [ & ]( const UTXO& u ) {
@@ -161,6 +168,8 @@ bool Blockchain::addBlock( const Block& block )
             {
                return false;   // UTXO not found
             }
+
+            usedUTXOs.insert( utxoKey );
 
             inputSum += it->amount;
          }
@@ -211,7 +220,8 @@ bool Blockchain::addBlock( const Block& block )
    std::vector<Transaction> newPendingTxs;
    for ( const auto& mempoolTx : pendingTxs )
    {
-      bool included = false;
+      bool included    = false;
+      bool conflicting = false;
       for ( const auto& blockTx : block.txs )
       {
          if ( mempoolTx.txid == blockTx.txid )
@@ -222,6 +232,19 @@ bool Blockchain::addBlock( const Block& block )
       }
 
       if ( !included )
+      {
+         for ( const auto& input : mempoolTx.inputs )
+         {
+            auto utxoKey = std::make_pair( input.txid, input.outputIndex );
+            if ( usedUTXOs.find( utxoKey ) != usedUTXOs.end() )
+            {
+               conflicting = true;
+               break;
+            }
+         }
+      }
+
+      if ( !included && !conflicting )
       {
          newPendingTxs.push_back( mempoolTx );
       }
@@ -267,6 +290,12 @@ bool Blockchain::isTransactionDuplicate( const Transaction& tx ) const
                            [ & ]( const auto& pendingTx )
                            { return tx == pendingTx; } );
 
+   if ( it != pendingTxs.end() )
+   {
+      std::cout << "Duplicate sender: " << it->sender
+                << " receiver: " << it->receiver << " Amount: " << it->amount
+                << std::endl;
+   }
    return it != pendingTxs.end();
 }
 
@@ -291,6 +320,68 @@ bool Blockchain::isValidTransaction( const Transaction& tx ) const
    if ( tx.sender.empty() || tx.receiver.empty() || tx.amount <= 0 ||
         isTransactionDuplicate( tx ) )
    {
+      std::cout << "Invalid TX INFO sender: " << tx.sender
+                << " receiver: " << tx.receiver << " amount: " << tx.amount
+                << std::endl;
+      return false;
+   }
+
+   // This is now checked in blockchain.addBlock and here to avoid dead
+   // Transactions in pendingTxs
+   // Check UTXO validity and balance
+   double inputSum = 0.0;
+   for ( const auto& input : tx.inputs )
+   {
+      // Verify UTXO exists in utxoSet
+      auto it = std::find_if( utxoSet.begin(), utxoSet.end(),
+                              [ & ]( const UTXO& u ) {
+                                 return u.txid == input.txid &&
+                                        u.outputIndex == input.outputIndex;
+                              } );
+
+      if ( it == utxoSet.end() )
+      {
+         std::cout << "Invalid TX: UTXO not found for input txid: "
+                   << input.txid << " outputIndex: " << input.outputIndex
+                   << std::endl;
+         return false;
+      }
+
+      // Verify input amount matches UTXO amount
+      if ( input.amount != it->amount )
+      {
+         std::cout << "Invalid TX: Input amount mismatch\n";
+         return false;
+      }
+
+      inputSum += it->amount;
+
+      // Check for double-spending in pendingTxs
+      for ( const auto& pendingTx : pendingTxs )
+      {
+         for ( const auto& pendingInput : pendingTx.inputs )
+         {
+            if ( pendingInput.txid == input.txid &&
+                 pendingInput.outputIndex == input.outputIndex )
+            {
+               std::cout << "Invalid TX: Double-spend attempt in mempool\n";
+               return false;
+            }
+         }
+      }
+   }
+
+   // Check balance (outputs + implicit fee)
+   double outputSum = 0.0;
+   for ( const auto& output : tx.outputs )
+   {
+      outputSum += output.amount;
+   }
+
+   if ( inputSum < outputSum )
+   {
+      std::cout << "Invalid TX: Insufficient funds (inputSum: " << inputSum
+                << ", outputSum: " << outputSum << ")\n";
       return false;
    }
 
@@ -336,7 +427,7 @@ Block Blockchain::minePendingTransactions( std::string& minerAddress )
 std::vector<Transaction> Blockchain::selectTransactions( size_t max )
 {
    // I guess locking is kinda important if stuff is distributed
-   std::lock_guard<std::mutex> lock(pendingTxsMutex);
+   std::lock_guard<std::mutex> lock( pendingTxsMutex );
 
    // TODO, i want to add the blocks with highest fees which the node gets
    std::vector<Transaction> selected;
@@ -348,7 +439,8 @@ std::vector<Transaction> Blockchain::selectTransactions( size_t max )
    std::vector<std::pair<int32_t, size_t>> txFeePairs;
 
    // I dont think this is good for performance
-   // Sorting pendingTxs based on fee, which is calculated but total inputs minus total outputs for each transaction
+   // Sorting pendingTxs based on fee, which is calculated but total inputs
+   // minus total outputs for each transaction
    std::sort( pendingTxs.begin(), pendingTxs.end(),
               []( auto& tx1, auto& tx2 )
               {
@@ -394,6 +486,12 @@ std::vector<Transaction> Blockchain::selectTransactions( size_t max )
                                      { return tx.isReward == true; } ),
                      pendingTxs.end() );
 
+   std::cout << "Selected size: " << selected.size() << std::endl;
+   if ( selected.size() > 0 )
+   {
+      std::cout << "Selected tx info Sender: " << selected[ 0 ].sender
+                << " Receiver: " << selected[ 0 ].receiver << std::endl;
+   }
    return selected;
 }
 

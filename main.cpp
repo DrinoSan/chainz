@@ -29,40 +29,38 @@ int main( int argc, char* argv[] )
       }
    };
 
-   //std::thread thr( threadMine );
+   // std::thread thr( threadMine );
    std::cout << chain.toString() << std::endl;
-         chain.minePendingTransactions( nodeAddress );
-         std::cout << "HERE\n";
+   chain.minePendingTransactions( nodeAddress );
 
-   // chain.addTransaction(
-   //     { "Alice", "Bob", 50.0, 0.5, chain.getCurrentTime() } );
-   // chain.addTransaction( { "Alice", "Bob", 50.0, chain.getCurrentTime() } );
-   // chain.addTransaction(
-   //     { "Bob", "Charlie", 25.0, chain.getCurrentTime() } );
+   std::string nodeSignature = nodeAddress + "_SIG";
+   auto tx = Transaction::createTransaction( nodeAddress, "AliceAddr", 5, 1,
+                                             chain.utxoSet, nodeSignature );
+   chain.addTransaction( tx );
+   auto tx1 = Transaction::createTransaction( nodeAddress, "AliceAddr1", 5, 1,
+                                              chain.utxoSet, nodeSignature );
+   chain.addTransaction( tx1 );
+   auto tx2 = Transaction::createTransaction( nodeAddress, "AliceAddr2", 5, 1,
+                                              chain.utxoSet, nodeSignature );
+   chain.addTransaction( tx2 );
+   auto tx3 = Transaction::createTransaction( nodeAddress, "AliceAddr3", 5, 1,
+                                              chain.utxoSet, nodeSignature );
+   chain.addTransaction( tx3 );
+   auto tx4 = Transaction::createTransaction( nodeAddress, "AliceAddr4", 5, 1,
+                                              chain.utxoSet, nodeSignature );
+   chain.addTransaction( tx4 );
 
-   // std::cout << "Mining new block...\n";
-   // chain.mineBlock();
+   std::cout << "Mining new block...\n";
+   chain.minePendingTransactions( nodeAddress );
 
-   // chain.addTransaction(
-   //     { "Charlie", "Alice", 10.0, chain.getCurrentTime() } );
-   // chain.addTransaction( { "Alice", "Bob", 5.0, chain.getCurrentTime() } );
-   // chain.addTransaction( { "Bob", "Charlie", 2.0, chain.getCurrentTime() } );
-   // chain.addTransaction(
-   //     { "Charlie", "Alice", 1.0, chain.getCurrentTime() } );
-
-   // chain.mineBlock();
-
-   // chain.addTransaction( { "Alice", "Bob", 1.0, chain.getCurrentTime() } );
-   // chain.mineBlock();
-
-   // if ( chain.isChainValid() )
-   //{
-   //    std::cout << "Blockchain is valid!" << std::endl;
-   // }
-   // else
-   //{
-   //    std::cout << "Blockchain is invalid!" << std::endl;
-   // }
+   if ( chain.isChainValid() )
+   {
+      std::cout << "Blockchain is valid!" << std::endl;
+   }
+   else
+   {
+      std::cout << "Blockchain is invalid!" << std::endl;
+   }
 
    std::cout << chain.toString() << std::endl;
 

@@ -40,11 +40,11 @@ class Transaction
    bool operator==( const Transaction& other ) const;
 
    // ----------------------------------------------------------------------------
-   Transaction createTransaction( const std::string& senderAddr,
-                                  const std::string& receiverAddr,
-                                  double amount, double fee,
-                                  const std::vector<UTXO>& availableUtxos,
-                                  const std::string&       privateKey );
+   static Transaction
+   createTransaction( const std::string& senderAddr,
+                      const std::string& receiverAddr, double amount,
+                      double fee, const std::vector<UTXO>& availableUtxos,
+                      const std::string& privateKey );
 
  public:
    std::string         txid;
