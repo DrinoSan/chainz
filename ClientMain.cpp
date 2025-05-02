@@ -25,7 +25,13 @@ std::string readPrivateKeyFromFile( const std::string& filePath )
 // ----------------------------------------------------------------------------
 int main( int argc, char* argv[] )
 {
-   if ( argc < 9 )
+   if ( argc == 2 )
+   {
+      std::string              arg = argv[ 1 ];
+      std::vector<std::string> peers{ "localhost:8080" };
+      Client::showUTXOs( peers );
+   }
+   else if ( argc < 9 )
    {
       std::cerr << "Usage: ./client -sender <sender> -receiver <receiver> "
                    "-amount <amount> -fee <fee> -keyfile <keyfile>"

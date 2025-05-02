@@ -16,6 +16,10 @@ class Client
                                          double amount, double fee,
                                          const std::string& privateKey );
 
+   // ----------------------------------------------------------------------------
+   static void showUTXOs( const std::vector<std::string>& peers );
+
+   // ----------------------------------------------------------------------------
    static void broadcastTransaction( const std::vector<std::string>& peers,
                                      const Transaction&              tx );
 

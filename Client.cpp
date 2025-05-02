@@ -12,7 +12,9 @@ void Client::broadcastTransaction( const std::vector<std::string>& peers,
    for ( const auto& peer : peers )
    {
       httplib::Client cli( peer.c_str() );
-      cli.Post( "/tx", tx.toJson().dump(), "application/json" );
+
+      json j = tx;
+      cli.Post( "/tx", j.dump(), "application/json" );
    }
 }
 
@@ -37,6 +39,7 @@ Transaction Client::createTransaction( const std::string& senderAddr,
    // Node needs to remove unspent utxos later on
    std::vector<utxo::UTXO> unspentUTXO;
    int32_t                 utxoAmountAccum{};
+
    for ( const auto& utxo : availableUtxos )
    {
       if ( utxo.address == senderAddr )
@@ -106,7 +109,6 @@ std::vector<utxo::UTXO> Client::getUtxos( const std::string& address )
 
       for ( auto& [ key, val ] : bodyJson.items() )
       {
-         std::cout << "key: " << key << ", value:" << val << '\n';
          utxoResult.push_back( val );
       }
 
@@ -118,4 +120,19 @@ std::vector<utxo::UTXO> Client::getUtxos( const std::string& address )
    }
 
    return utxoResult;
+}
+
+// ----------------------------------------------------------------------------
+void Client::showUTXOs( const std::vector<std::string>& peers )
+{
+   std::string     endpoint{ "/utxo" };
+   httplib::Client cli( "localhost:8080" );
+
+   if ( auto res = cli.Get( endpoint ) )
+   {
+      auto body = res->body;
+
+      json bodyJson = json::parse( body );
+      std::cout << body << std::endl;
+   }
 }

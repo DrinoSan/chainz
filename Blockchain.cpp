@@ -23,17 +23,21 @@ Blockchain::Blockchain()
 }
 
 // ----------------------------------------------------------------------------
-void Blockchain::addTransaction( const Transaction& tx )
+bool Blockchain::addTransaction( const Transaction& tx )
 {
    if ( !isValidTransaction( tx ) )
    {
-      std::cerr << "Invalid regular transaction found, block will not be added"
+      std::cerr << "Invalid transaction: " << tx.toJson().dump( 4 )
                 << std::endl;
 
-      return;
+      return false;
    }
 
+   std::cout << "Adding transaction to mempool: " << tx.toJson().dump( 4 )
+             << std::endl;
+
    pendingTxs.push_back( tx );
+   return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -155,6 +159,7 @@ bool Blockchain::addBlock( const Block& block )
             {
                std::cerr
                    << "Double-spend attempt: UTXO already used in this block\n";
+
                return false;
             }
 
@@ -211,9 +216,6 @@ bool Blockchain::addBlock( const Block& block )
       // Add new UTXOs
       for ( size_t i = 0; i < tx.outputs.size(); ++i )
       {
-         //std::cout << "Adding UTXO: txid=" << tx.txid << ", index=" << i
-         //          << ", amount=" << tx.outputs[ i ].amount
-         //          << ", address=" << tx.outputs[ i ].address << std::endl;
          utxoSet.push_back( { tx.txid, static_cast<int>( i ),
                               tx.outputs[ i ].amount,
                               tx.outputs[ i ].address } );
@@ -308,9 +310,13 @@ bool Blockchain::addToMempool( const Transaction& tx )
 {
    if ( !isValidTransaction( tx ) )
    {
+      std::cerr << "Transaction failed validation: " << tx.toJson().dump( 4 )
+                << std::endl;
       return false;
    }
 
+   std::cout << "Adding transaction to mempool: " << tx.toJson().dump( 4 )
+             << std::endl;
    pendingTxs.push_back( tx );
    return true;
 }
@@ -505,12 +511,12 @@ std::vector<Transaction> Blockchain::selectTransactions( size_t max )
    // I think i can erase all with rewarded true, first of all only the node
    // itself calls this function. For blocks received via broadcast we do all
    // checks in addBlock
-
    pendingTxs.erase( std::remove_if( pendingTxs.begin(), pendingTxs.end(),
                                      []( const auto& tx )
                                      { return tx.isReward == true; } ),
                      pendingTxs.end() );
 
+   std::cout << "selected size: " << selected.size() << std::endl;
    return selected;
 }
 

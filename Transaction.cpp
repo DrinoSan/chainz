@@ -12,6 +12,9 @@ Transaction Transaction::fromJson( const json& j )
    j.at( "amount" ).get_to( tx.amount );
    j.at( "timestamp" ).get_to( tx.timestamp );
 
+   j.at( "inputs" ).get_to( tx.inputs );
+   j.at( "outputs" ).get_to( tx.outputs );
+
    return tx;
 }
 
@@ -37,9 +40,12 @@ json Transaction::toJson() const
 void to_json( json& j, const Transaction& t )
 {
    j = json{ { "sender", t.sender },
+             { "txid", t.txid },
              { "receiver", t.receiver },
              { "amount", t.amount },
              { "fee", t.fee },
+             { "inputs", t.inputs },
+             { "outputs", t.outputs },
              { "timestamp", t.timestamp } };
 }
 
@@ -47,9 +53,12 @@ void to_json( json& j, const Transaction& t )
 void from_json( const json& j, Transaction& t )
 {
    j.at( "sender" ).get_to( t.sender );
+   j.at( "txid" ).get_to( t.txid );
    j.at( "receiver" ).get_to( t.receiver );
    j.at( "amount" ).get_to( t.amount );
    j.at( "timestamp" ).get_to( t.timestamp );
+   j.at( "inputs" ).get_to( t.inputs );
+   j.at( "outputs" ).get_to( t.outputs );
 }
 
 // ----------------------------------------------------------------------------
@@ -99,15 +108,16 @@ Transaction Transaction::createTransaction(
 
    // Convert duration to milliseconds
    auto milliseconds =
-       std::chrono::duration_cast<std::chrono::milliseconds>( duration ).count();
+       std::chrono::duration_cast<std::chrono::milliseconds>( duration )
+           .count();
 
-   tx.txid         = senderAddr + std::to_string( milliseconds );
-   tx.sender       = senderAddr;
-   tx.receiver     = receiverAddr;
-   tx.fee          = fee;
-   tx.amount       = amount;
-   tx.isReward     = false;
-   tx.timestamp    = std::to_string( milliseconds );
+   tx.txid      = senderAddr + std::to_string( milliseconds );
+   tx.sender    = senderAddr;
+   tx.receiver  = receiverAddr;
+   tx.fee       = fee;
+   tx.amount    = amount;
+   tx.isReward  = false;
+   tx.timestamp = std::to_string( milliseconds );
 
    return tx;
 }

@@ -12,7 +12,7 @@ class Blockchain
  public:
    Blockchain();
 
-   void addTransaction( const Transaction& tx );
+   bool addTransaction( const Transaction& tx );
    void mineBlock();
    void mineBlock( Block& block, int difficulty );
    bool addBlock( const Block& block );

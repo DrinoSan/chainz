@@ -5,27 +5,11 @@
 
 #include "UTXO.h"
 #include "json/json.hpp"
+#include "Input.h"
+#include "Output.h"
 
 // for convenience
 using json = nlohmann::json;
-
-// ----------------------------------------------------------------------------
-// Input structure
-struct Input
-{
-   std::string txid;   // Reference to UTXO
-   int         outputIndex;
-   double      amount;
-   std::string signature;   // Simplified (in practice, cryptographic signature)
-};
-
-// ----------------------------------------------------------------------------
-// Output structure
-struct Output
-{
-   std::string address;   // Recipient
-   double      amount;    // Amount
-};
 
 // ----------------------------------------------------------------------------
 class Transaction

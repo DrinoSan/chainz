@@ -1,9 +1,12 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <mutex>
 
 #include "Blockchain.h"
 #include "Node.h"
+
+std::mutex blockchainMutex;
 
 int main( int argc, char* argv[] )
 {
@@ -24,33 +27,15 @@ int main( int argc, char* argv[] )
    {
       while ( true )
       {
-         chain.minePendingTransactions( nodeAddress );
+         {
+            std::lock_guard<std::mutex> lock( blockchainMutex );
+            chain.minePendingTransactions( nodeAddress );
+         }
          std::this_thread::sleep_for( std::chrono::milliseconds( 5000 ) );
       }
    };
 
-   // std::thread thr( threadMine );
-   std::cout << chain.toString() << std::endl;
-   chain.minePendingTransactions( nodeAddress );
-
-   std::string nodeSignature = nodeAddress + "_SIG";
-   ///////////////
-   auto tx = Transaction::createTransaction( nodeAddress, "AliceAddr", 5, 1,
-                                             chain.utxoSet, nodeSignature );
-   chain.addTransaction( tx );
-   std::cout << "Mining new block...\n";
-   chain.minePendingTransactions( nodeAddress );
-   ///////////////
-
-
-   sleep(5);
-   ///////////////
-   auto tx4 = Transaction::createTransaction( nodeAddress, "AliceAddr4", 5, 1,
-                                              chain.utxoSet, nodeSignature );
-   chain.addTransaction( tx4 );
-   std::cout << "Mining new block...\n";
-   chain.minePendingTransactions( nodeAddress );
-   ///////////////
+   std::thread thr( threadMine );
 
    if ( chain.isChainValid() )
    {
@@ -60,8 +45,6 @@ int main( int argc, char* argv[] )
    {
       std::cout << "Blockchain is invalid!" << std::endl;
    }
-
-   std::cout << chain.toString() << std::endl;
 
    std::string              host = "localhost";
    std::vector<std::string> peersDummy{ "8080", "8081", "8082" };
@@ -81,5 +64,6 @@ int main( int argc, char* argv[] )
    }
 
    Node node( chain, host, portInt, peers );
+   thr.join(); // Ensure the mining thread runs indefinitely
    return 0;
 }

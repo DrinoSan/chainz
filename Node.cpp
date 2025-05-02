@@ -20,6 +20,8 @@ void Node::broadcastTransaction( const Transaction& tx ) const
    for ( const auto& peer : peers )
    {
       httplib::Client cli( peer.c_str() );
-      cli.Post( "/tx", tx.toJson().dump(), "application/json" );
+
+      json j = tx;
+      cli.Post( "/tx", j.dump(), "application/json" );
    }
 }
