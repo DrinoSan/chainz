@@ -16,8 +16,12 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/json)
 
 # Add the executable target
-add_executable(blockchain main.cpp Block.cpp Transaction.cpp Blockchain.cpp Node.cpp UTXO.cpp)
+add_executable(blockchain main.cpp Block.cpp Transaction.cpp Blockchain.cpp Node.cpp UTXO.cpp )
 
 # Link OpenSSL libraries to the executable
 target_link_libraries(blockchain PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+
+# Add the Client executable
+add_executable(client ClientMain.cpp Client.cpp Transaction.cpp UTXO.cpp)
+target_link_libraries(client PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 
