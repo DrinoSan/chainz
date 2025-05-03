@@ -29,7 +29,7 @@ void from_json( const json& j, Block& b )
    j.at( "hash" ).get_to( b.hash );
    j.at( "transactions" ).get_to( b.txs );
    j.at( "nonce" ).get_to( b.nonce );
-   j.at( "diffuculty" ).get_to( b.difficulty );
+   j.at( "difficulty" ).get_to( b.difficulty );
 
    std::int64_t timestampSeconds;
    j.at( "timestamp" ).get_to( timestampSeconds );

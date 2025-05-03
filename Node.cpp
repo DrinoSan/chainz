@@ -7,8 +7,17 @@ void Node::broadcastBlock( const Block& block ) const
 
    for ( const auto& peer : peers )
    {
-      httplib::Client cli( peer.c_str() );
-      cli.Post( "/block", block.toJson().dump(), "application/json" );
+      try
+      {
+         httplib::Client cli( peer.c_str() );
+         json blockJson = block;
+         cli.Post( "/block", blockJson.dump(), "application/json" );
+      }
+      catch ( const std::exception& e )
+      {
+         std::cout << "Something went wrong with a peer maybe offline Peer: "
+                   << peer << std::endl;
+      }
    }
 }
 

@@ -20,7 +20,7 @@ class Node
       // I want to keep blockchain to not keep track of the peers and
       // communication stuff currentyl via callbacks
       bc.setBroadcastBlockCallback( [ this ]( const Block& block )
-                               { this->broadcastBlock( block ); } );
+                                    { this->broadcastBlock( block ); } );
 
       // Adding transaction
       svr.Post( "/tx",
@@ -65,9 +65,10 @@ class Node
                    try
                    {
                       json  blockJson = json::parse( req.body );
-                      Block block     = Block::fromJson( blockJson );
+                      Block block     = blockJson;
                       if ( bc.addBlock( block ) )
                       {
+                         std::cout << "Block received via Node\n";
                          broadcastBlock( block );
                          res.set_content( "OK", "text/plain" );
                       }
@@ -79,6 +80,7 @@ class Node
                    }
                    catch ( const std::exception& e )
                    {
+                      std::cout << "ERROR: " << e.what() << std::endl;
                       res.status = 400;
                       res.set_content( "Invalid JSON", "text/plain" );
                    }
