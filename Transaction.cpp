@@ -73,6 +73,7 @@ void from_json( const json& j, Transaction& t )
    j.at( "inputs" ).get_to( t.inputs );
    j.at( "outputs" ).get_to( t.outputs );
    j.at( "isReward" ).get_to( t.isReward );
+   j.at( "fee" ).get_to( t.fee );
 }
 
 // ----------------------------------------------------------------------------
