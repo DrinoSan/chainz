@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <mutex>
 #include <vector>
 
@@ -12,13 +13,17 @@ class Blockchain
  public:
    Blockchain();
 
-   bool addTransaction( const Transaction& tx );
-   void mineBlock();
-   void mineBlock( Block& block, int difficulty );
-   bool addBlock( const Block& block );
-   bool addToMempool( const Transaction& tx );
+   int32_t getEpochDifficulty() const;
+   int32_t calculateExpectedDifficulty() const;
+   int32_t adjustDifficulty() const;
+   bool    addTransaction( const Transaction& tx );
+   void    mineBlock();
+   void    mineBlock( Block& block, int difficulty );
+   bool    addBlock( const Block& block );
+   bool    addToMempool( const Transaction& tx );
+
    // Needed for blocks
-   std::string getCurrentTime() const;
+   std::chrono::system_clock::time_point getCurrentTime() const;
 
    // Json shit
    json        toJson() const;
@@ -27,11 +32,12 @@ class Blockchain
    bool  isChainValid() const;
    Block minePendingTransactions( std::string& minerAddress );
 
-   std::vector<utxo::UTXO> getUTXOsForAddress( const std::string& address ) const;
+   std::vector<utxo::UTXO>
+   getUTXOsForAddress( const std::string& address ) const;
 
  public:
-   std::vector<utxo::UTXO>  utxoSet;
-   std::vector<Block> chain;
+   std::vector<utxo::UTXO> utxoSet;
+   std::vector<Block>      chain;
 
  private:
    // Methods for checking
@@ -43,5 +49,6 @@ class Blockchain
    std::mutex pendingTxsMutex;
 
  private:
-   std::vector<Transaction> pendingTxs;   // TODO rename to memPool
+   std::vector<Transaction> pendingTxs;       // TODO rename to memPool
+   int                      difficulty = 4;   // Initial difficulty
 };

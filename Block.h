@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -28,12 +29,13 @@ class Block
    // ----------------------------------------------------------------------------
    std::string calculateHash() const;
 
-   int32_t                  index;
-   std::string              prevHash;
-   std::string              hash;
-   std::vector<Transaction> txs;
-   uint64_t                 nonce;
-   std::string              timestamp;
+   int32_t                               index;
+   std::string                           prevHash;
+   std::string                           hash;
+   std::vector<Transaction>              txs;
+   uint64_t                              nonce;
+   int32_t                               difficulty;
+   std::chrono::system_clock::time_point timestamp;
 };
 
 void to_json( json& j, const Block& b );

@@ -58,7 +58,7 @@ bool Blockchain::isChainValid() const
          return false;
       }
 
-      if ( !isValidPoW( current.hash, 4 ) )
+      if ( !isValidPoW( current.hash, current.difficulty ) )
       {
          return false;
       }
@@ -76,11 +76,12 @@ bool Blockchain::isValidPoW( const std::string& hash, int difficulty ) const
 // ----------------------------------------------------------------------------
 void Blockchain::mineBlock( Block& block, int difficulty )
 {
-   block.nonce = 0;
+   block.difficulty = difficulty;
+   block.nonce      = 0;
    while ( true )
    {
       block.hash = block.calculateHash();
-      if ( isValidPoW( block.hash, difficulty ) )
+      if ( isValidPoW( block.hash, block.difficulty ) )
       {
          break;
       }
@@ -99,17 +100,16 @@ void Blockchain::mineBlock()
    newBlock.timestamp = getCurrentTime();
    pendingTxs.clear();
 
-   mineBlock( newBlock, 4 );
+   mineBlock( newBlock, difficulty );
 
    chain.push_back( newBlock );
    std::cout << "Block mined: " << newBlock.hash << std::endl;
 }
 
 // ----------------------------------------------------------------------------
-std::string Blockchain::getCurrentTime() const
+std::chrono::system_clock::time_point Blockchain::getCurrentTime() const
 {
-   std::time_t now = std::time( nullptr );
-   return std::ctime( &now );
+   return std::chrono::system_clock::now();
 }
 
 // ----------------------------------------------------------------------------
@@ -126,10 +126,50 @@ std::string Blockchain::toString() const
 }
 
 // ----------------------------------------------------------------------------
+int32_t Blockchain::adjustDifficulty() const
+{
+   if ( chain.size() < 10 )
+   {
+      return getEpochDifficulty();
+   }
+
+   auto lastBlockTime    = chain.back().timestamp;
+   auto tenBlocksAgoTime = chain[ chain.size() - 10 ].timestamp;
+   auto duration         = lastBlockTime - tenBlocksAgoTime;
+
+   auto seconds =
+       std::chrono::duration_cast<std::chrono::seconds>( duration ).count();
+
+   const int targetSeconds = 100;   // 10 seconds per block × 10 blocks
+   int       newDifficulty = chain.back().difficulty;
+
+   if ( seconds < targetSeconds )
+   {
+      newDifficulty++;
+      std::cout << "Difficulty increased to " << difficulty << std::endl;
+   }
+   else if ( seconds > targetSeconds && difficulty > 1 )
+   {
+      newDifficulty--;
+      std::cout << "Difficulty decreased to " << difficulty << std::endl;
+   }
+
+   return newDifficulty;
+}
+
+// ----------------------------------------------------------------------------
 bool Blockchain::addBlock( const Block& block )
 {
    int32_t rewardCount{};
    double  totalFees;
+
+   int32_t expectedDifficulty = calculateExpectedDifficulty();
+   if ( block.difficulty != expectedDifficulty )
+   {
+      std::cerr << "Invalid block difficulty: expected " << expectedDifficulty
+                << ", got " << block.difficulty << std::endl;
+      return false;
+   }
 
    std::set<std::pair<std::string, int>> usedUTXOs;
    for ( const auto& tx : block.txs )
@@ -272,7 +312,7 @@ bool Blockchain::addBlock( const Block& block )
       return false;
    }
 
-   if ( !isValidPoW( block.hash, 4 ) )
+   if ( !isValidPoW( block.hash, block.difficulty ) )
    {
       std::cerr << "Invalid proof of work" << std::endl;
       return false;
@@ -286,6 +326,7 @@ bool Blockchain::addBlock( const Block& block )
    }
 
    chain.push_back( block );
+
    return true;
 }
 
@@ -402,10 +443,11 @@ bool Blockchain::isValidTransaction( const Transaction& tx ) const
 Block Blockchain::minePendingTransactions( std::string& minerAddress )
 {
    Block block;
-   block.index     = chain.size();
-   block.prevHash  = chain.back().hash;
-   block.timestamp = getCurrentTime();
-   block.txs       = selectTransactions( 10 );
+   block.index      = chain.size();
+   block.prevHash   = chain.back().hash;
+   block.timestamp  = getCurrentTime();
+   block.txs        = selectTransactions( 10 );
+   block.difficulty = calculateExpectedDifficulty();
 
    double totalFees = 0.0;
    for ( const auto& tx : block.txs )
@@ -416,15 +458,10 @@ Block Blockchain::minePendingTransactions( std::string& minerAddress )
       }
    }
 
-   auto now = std::chrono::system_clock::now();
-
-   // Convert the current time to time since epoch
-   auto duration = now.time_since_epoch();
-
-   // Convert duration to milliseconds
-   auto milliseconds =
-       std::chrono::duration_cast<std::chrono::milliseconds>( duration )
-           .count();
+   auto now          = std::chrono::system_clock::now();
+   auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           now.time_since_epoch() )
+                           .count();
 
    // Node which successfully mines a block gets a isReward
    Transaction reward;
@@ -439,7 +476,7 @@ Block Blockchain::minePendingTransactions( std::string& minerAddress )
    reward.outputs.push_back( { minerAddress, 10.0 + totalFees } );
    block.txs.insert( block.txs.begin(), reward );
 
-   mineBlock( block, 4 );
+   mineBlock( block, block.difficulty );
 
    if ( addBlock( block ) )
    {
@@ -546,4 +583,26 @@ Blockchain::getUTXOsForAddress( const std::string& address ) const
    }
 
    return utxoForAddress;
+}
+
+// ----------------------------------------------------------------------------
+int32_t Blockchain::calculateExpectedDifficulty() const
+{
+   if ( chain.size() % 10 == 0 && chain.size() >= 10 )
+   {
+      return adjustDifficulty();
+   }
+
+   return getEpochDifficulty();
+}
+
+// ----------------------------------------------------------------------------
+int32_t Blockchain::getEpochDifficulty() const
+{
+   if ( chain.empty() )
+   {
+      return 4;   // Anfangs difficulty
+   }
+
+   return chain.back().difficulty;
 }

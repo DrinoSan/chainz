@@ -36,7 +36,7 @@ class Transaction
    std::string         sender;
    std::string         receiver;
    double              amount;
-   std::string         timestamp;
+   std::chrono::system_clock::time_point timestamp;
    double              fee;
    bool                isReward = false;
 };

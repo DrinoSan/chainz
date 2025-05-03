@@ -83,7 +83,7 @@ Transaction Client::createTransaction( const std::string& senderAddr,
    tx.fee       = fee;
    tx.amount    = amount;
    tx.isReward  = false;
-   tx.timestamp = std::to_string( milliseconds );
+   tx.timestamp = now;
 
    return tx;
 }

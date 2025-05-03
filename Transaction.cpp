@@ -10,7 +10,11 @@ Transaction Transaction::fromJson( const json& j )
    j.at( "sender" ).get_to( tx.sender );
    j.at( "receiver" ).get_to( tx.receiver );
    j.at( "amount" ).get_to( tx.amount );
-   j.at( "timestamp" ).get_to( tx.timestamp );
+
+   std::int64_t timestamp_seconds;
+   j.at( "timestamp" ).get_to( timestamp_seconds );
+   tx.timestamp = std::chrono::system_clock::time_point(
+       std::chrono::seconds( timestamp_seconds ) );
 
    j.at( "inputs" ).get_to( tx.inputs );
    j.at( "outputs" ).get_to( tx.outputs );
@@ -30,33 +34,41 @@ bool Transaction::operator==( const Transaction& other ) const
 // ----------------------------------------------------------------------------
 json Transaction::toJson() const
 {
+   auto timestampSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+                               timestamp.time_since_epoch() )
+                               .count();
+
    return { { "sender", sender },
             { "receiver", receiver },
             { "amount", amount },
-            { "timestamp", timestamp } };
+            { "timestamp", timestampSeconds } };
 }
 
 // ----------------------------------------------------------------------------
 void to_json( json& j, const Transaction& t )
 {
-   j = json{ { "sender", t.sender },
-             { "txid", t.txid },
-             { "receiver", t.receiver },
-             { "amount", t.amount },
-             { "fee", t.fee },
-             { "inputs", t.inputs },
-             { "outputs", t.outputs },
-             { "timestamp", t.timestamp } };
+   auto timestampSeconds = std::chrono::duration_cast<std::chrono::seconds>(
+                               t.timestamp.time_since_epoch() )
+                               .count();
+
+   j = json{ { "sender", t.sender },     { "txid", t.txid },
+             { "receiver", t.receiver }, { "amount", t.amount },
+             { "fee", t.fee },           { "inputs", t.inputs },
+             { "outputs", t.outputs },   { "timestamp", timestampSeconds } };
 }
 
 // ----------------------------------------------------------------------------
 void from_json( const json& j, Transaction& t )
 {
+   std::int64_t timestampSeconds;
+   j.at( "timestamp" ).get_to( timestampSeconds );
+   t.timestamp = std::chrono::system_clock::time_point(
+       std::chrono::seconds( timestampSeconds ) );
+
    j.at( "sender" ).get_to( t.sender );
    j.at( "txid" ).get_to( t.txid );
    j.at( "receiver" ).get_to( t.receiver );
    j.at( "amount" ).get_to( t.amount );
-   j.at( "timestamp" ).get_to( t.timestamp );
    j.at( "inputs" ).get_to( t.inputs );
    j.at( "outputs" ).get_to( t.outputs );
 }
@@ -117,7 +129,7 @@ Transaction Transaction::createTransaction(
    tx.fee       = fee;
    tx.amount    = amount;
    tx.isReward  = false;
-   tx.timestamp = std::to_string( milliseconds );
+   tx.timestamp = now;
 
    return tx;
 }
