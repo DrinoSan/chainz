@@ -109,7 +109,9 @@ class Node
                   nlohmann::json j = nlohmann::json::array();
                   for ( const auto& u : bc.utxoSet )
                   {
-                     std::cout << "-------- " << u.txid << " " << u.outputIndex << " " << u.amount << " " << u.address << std::endl;
+                     std::cout << "-------- " << u.txid << " " << u.outputIndex
+                               << " " << u.amount << " " << u.address
+                               << std::endl;
                      if ( u.address == userAddress )
                      {
                         nlohmann::json uj;
@@ -124,8 +126,11 @@ class Node
       svr.listen( host.c_str(), port );
    }
 
-   void broadcastBlock( const Block& block ) const;
-   void broadcastTransaction( const Transaction& tx ) const;
+   static void broadcastBlock( const std::vector<std::string>& peers,
+                               const Block&                    block );
+
+   void        broadcastBlock( const Block& block ) const;
+   void        broadcastTransaction( const Transaction& tx ) const;
 
  private:
    Blockchain&              bc;

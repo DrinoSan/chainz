@@ -29,8 +29,8 @@ class Blockchain
    json        toJson() const;
    std::string toString() const;
 
-   bool  isChainValid() const;
-   Block minePendingTransactions( std::string& minerAddress );
+   bool isChainValid() const;
+   bool minePendingTransactions( std::string& minerAddress );
 
    std::vector<utxo::UTXO>
    getUTXOsForAddress( const std::string& address ) const;

@@ -440,7 +440,7 @@ bool Blockchain::isValidTransaction( const Transaction& tx ) const
 }
 
 // ----------------------------------------------------------------------------
-Block Blockchain::minePendingTransactions( std::string& minerAddress )
+bool Blockchain::minePendingTransactions( std::string& minerAddress )
 {
    Block block;
    block.index      = chain.size();
@@ -482,13 +482,17 @@ Block Blockchain::minePendingTransactions( std::string& minerAddress )
    {
       std::cout << "Block mined successfully!"
                 << std::endl;   // We currently only have it locally
+
+      std::vector<std::string> peers{ "localhost:8081", "localhost:8082" };
+      Node::broadcastBlock( peers, block );
+      return true;
    }
    else
    {
       std::cout << "Block validation failed!" << std::endl;
    }
 
-   return block;
+   return false;
 }
 
 // ----------------------------------------------------------------------------
