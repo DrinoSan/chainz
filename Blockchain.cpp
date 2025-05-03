@@ -14,10 +14,10 @@
 Blockchain::Blockchain()
 {
    Block genesis;
-   genesis.index     = 0;
-   genesis.prevHash  = "Mojo";
-   genesis.timestamp = getCurrentTime();
-   genesis.hash      = genesis.calculateHash();
+   genesis.index      = 0;
+   genesis.prevHash   = "Mojo";
+   genesis.timestamp  = getCurrentTime();
+   genesis.hash       = genesis.calculateHash();
    genesis.difficulty = 4;
 
    chain.push_back( genesis );
@@ -188,6 +188,8 @@ bool Blockchain::addBlock( const Block& block )
 
             return false;
          }
+
+         continue;
       }
       else
       {
@@ -213,6 +215,7 @@ bool Blockchain::addBlock( const Block& block )
 
             if ( it == utxoSet.end() )
             {
+               std::cerr << "UTXO not found\n";
                return false;   // UTXO not found
             }
 
@@ -229,6 +232,8 @@ bool Blockchain::addBlock( const Block& block )
 
          if ( inputSum < outputSum )
          {
+            std::cerr << "Insufficient funds, inputSum: " << inputSum
+                      << " outputSum: " << outputSum << std::endl;
             return false;   // Invalid amounts
          }
 

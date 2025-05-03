@@ -18,6 +18,7 @@ Transaction Transaction::fromJson( const json& j )
 
    j.at( "inputs" ).get_to( tx.inputs );
    j.at( "outputs" ).get_to( tx.outputs );
+   j.at( "isReward" ).get_to( tx.isReward );
 
    return tx;
 }
@@ -53,7 +54,7 @@ void to_json( json& j, const Transaction& t )
 
    j = json{ { "sender", t.sender },     { "txid", t.txid },
              { "receiver", t.receiver }, { "amount", t.amount },
-             { "fee", t.fee },           { "inputs", t.inputs },
+             { "fee", t.fee },           { "inputs", t.inputs },{ "isReward", t.isReward },
              { "outputs", t.outputs },   { "timestamp", timestampSeconds } };
 }
 
@@ -71,6 +72,7 @@ void from_json( const json& j, Transaction& t )
    j.at( "amount" ).get_to( t.amount );
    j.at( "inputs" ).get_to( t.inputs );
    j.at( "outputs" ).get_to( t.outputs );
+   j.at( "isReward" ).get_to( t.isReward );
 }
 
 // ----------------------------------------------------------------------------
