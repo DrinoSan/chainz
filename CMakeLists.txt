@@ -12,6 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Find OpenSSL package (required for SHA-256 hashing)
 find_package(OpenSSL REQUIRED)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+
 # Include directories for OpenSSL and nlohmann/json
 include_directories(${OPENSSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/json)
 

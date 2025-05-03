@@ -22,6 +22,10 @@ class Blockchain
    bool    addBlock( const Block& block );
    bool    addToMempool( const Transaction& tx );
 
+   // Calbacks for node
+   std::function<void( const Block& )> broadcastBlockCallback;
+   void setBroadcastBlockCallback( std::function<void( const Block& )> callback );
+
    // Needed for blocks
    std::chrono::system_clock::time_point getCurrentTime() const;
 

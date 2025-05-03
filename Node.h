@@ -17,6 +17,11 @@ class Node
          const std::vector<std::string>& peers_ )
        : bc{ bc_ }, peers{ std::move( peers_ ) }
    {
+      // I want to keep blockchain to not keep track of the peers and
+      // communication stuff currentyl via callbacks
+      bc.setBroadcastBlockCallback( [ this ]( const Block& block )
+                               { this->broadcastBlock( block ); } );
+
       // Adding transaction
       svr.Post( "/tx",
                 [ & ]( const auto& req, auto& res )
@@ -126,11 +131,9 @@ class Node
       svr.listen( host.c_str(), port );
    }
 
-   static void broadcastBlock( const std::vector<std::string>& peers,
-                               const Block&                    block );
-
-   void        broadcastBlock( const Block& block ) const;
-   void        broadcastTransaction( const Transaction& tx ) const;
+   // Used via callback
+   void broadcastBlock( const Block& block ) const;
+   void broadcastTransaction( const Transaction& tx ) const;
 
  private:
    Blockchain&              bc;

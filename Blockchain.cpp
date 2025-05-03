@@ -18,6 +18,7 @@ Blockchain::Blockchain()
    genesis.prevHash  = "Mojo";
    genesis.timestamp = getCurrentTime();
    genesis.hash      = genesis.calculateHash();
+   genesis.difficulty = 4;
 
    chain.push_back( genesis );
 }
@@ -483,8 +484,17 @@ bool Blockchain::minePendingTransactions( std::string& minerAddress )
       std::cout << "Block mined successfully!"
                 << std::endl;   // We currently only have it locally
 
-      std::vector<std::string> peers{ "localhost:8081", "localhost:8082" };
-      Node::broadcastBlock( peers, block );
+      // Checking if callback has been set;
+      if ( broadcastBlockCallback )
+      {
+         broadcastBlockCallback( block );
+      }
+      else
+      {
+         std::cout
+             << "Block will not be broadcasted, no callback set!!!!!!!!!\n";
+      }
+
       return true;
    }
    else
@@ -609,4 +619,11 @@ int32_t Blockchain::getEpochDifficulty() const
    }
 
    return chain.back().difficulty;
+}
+
+// ----------------------------------------------------------------------------
+void Blockchain::setBroadcastBlockCallback(
+    std::function<void( const Block& )> callback )
+{
+   broadcastBlockCallback = std::move( callback );
 }
