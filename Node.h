@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Block.h"
@@ -21,6 +22,11 @@ class Node
       // communication stuff currentyl via callbacks
       bc.setBroadcastBlockCallback( [ this ]( const Block& block )
                                     { this->broadcastBlock( block ); } );
+
+      bc.setSyncChainCallback( [ this ]() { return this->syncChain(); } );
+
+      bc.setGetHighestChainHeightCallback(
+          [ this ]() { return this->getLongestChainHeight(); } );
 
       // Adding transaction
       svr.Post( "/tx",
@@ -93,6 +99,18 @@ class Node
                   res.set_content( j.dump( 4 ), "application/json" );
                } );
 
+      // Needed to check if chain sync is needed
+      svr.Get( "/chain/height",
+               [ & ]( const httplib::Request&, httplib::Response& res )
+               {
+                  nlohmann::json j;
+                  j[ "height" ] =
+                      bc.chain.size() -
+                      1;   // Latest block index, because index starts at 0 and
+                           // height in this case actually is the index.
+                  res.set_content( j.dump(), "application/json" );
+               } );
+
       // Needed for Transaction creation in client
       svr.Get( "/utxo",
                [ this ]( const httplib::Request& req, httplib::Response& res )
@@ -130,15 +148,22 @@ class Node
                   res.set_content( j.dump( 4 ), "application/json" );
                } );
 
-      svr.listen( host.c_str(), port );
    }
 
    // Used via callback
-   void broadcastBlock( const Block& block ) const;
-   void broadcastTransaction( const Transaction& tx ) const;
+   void               broadcastBlock( const Block& block ) const;
+   void               broadcastTransaction( const Transaction& tx ) const;
+   std::vector<Block> syncChain() const;
 
+   // Function will return positive integer if a peer has a longer chain than
+   // its own
+   /// @param int32_t chain hight will be positive if hight is higher than its
+   /// own chain
+   /// @param std::string name of peer
+   std::pair<int32_t, std::string> getLongestChainHeight() const;
+
+   httplib::Server          svr;
  private:
    Blockchain&              bc;
-   httplib::Server          svr;
    std::vector<std::string> peers;
 };

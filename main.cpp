@@ -20,31 +20,15 @@ int main( int argc, char* argv[] )
       port = argv[ 1 ];
    }
 
-   Blockchain chain;
 
-   std::string nodeAddress{ "NodePort:" + port };
-   auto        threadMine = [ & ]()
-   {
-      while ( true )
-      {
-         {
-            std::lock_guard<std::mutex> lock( blockchainMutex );
-            chain.minePendingTransactions( nodeAddress );
-         }
-         std::this_thread::sleep_for( std::chrono::milliseconds( 5000 ) );
-      }
-   };
-
-   std::thread thr( threadMine );
-
-   if ( chain.isChainValid() )
-   {
-      std::cout << "Blockchain is valid!" << std::endl;
-   }
-   else
-   {
-      std::cout << "Blockchain is invalid!" << std::endl;
-   }
+   //if ( chain.isChainValid() )
+   //{
+   //   std::cout << "Blockchain is valid!" << std::endl;
+   //}
+   //else
+   //{
+   //   std::cout << "Blockchain is invalid!" << std::endl;
+   //}
 
    std::string              host = "localhost";
    std::vector<std::string> peersDummy{ "8080", "8081", "8082" };
@@ -63,7 +47,26 @@ int main( int argc, char* argv[] )
       std::cout << "Added peer localhost:" + peer << std::endl;
    }
 
+   Blockchain chain;
+   std::string nodeAddress{ "NodePort:" + port };
+
    Node node( chain, host, portInt, peers );
+   chain.setupChain();
+
+   auto        threadMine = [ & ]()
+   {
+      while ( true )
+      {
+         {
+            std::lock_guard<std::mutex> lock( blockchainMutex );
+            chain.minePendingTransactions( nodeAddress );
+         }
+         std::this_thread::sleep_for( std::chrono::milliseconds( 5000 ) );
+      }
+   };
+   std::thread thr( threadMine );
+
+   node.svr.listen( host.c_str(), portInt );
    thr.join(); // Ensure the mining thread runs indefinitely
    return 0;
 }

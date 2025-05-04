@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <ctime>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <openssl/sha.h>
@@ -11,16 +13,54 @@
 #include "UTXO.h"
 
 // ----------------------------------------------------------------------------
-Blockchain::Blockchain()
-{
-   Block genesis;
-   genesis.index      = 0;
-   genesis.prevHash   = "Mojo";
-   genesis.timestamp  = getCurrentTime();
-   genesis.hash       = genesis.calculateHash();
-   genesis.difficulty = 4;
+Blockchain::Blockchain() {}
 
-   chain.push_back( genesis );
+// ----------------------------------------------------------------------------
+void Blockchain::setupChain()
+{
+   std::cout << "Setting up chain\n";
+
+   // Make sure our callback is set
+   std::vector<Block> newChain;
+   if ( syncChainCallback )
+   {
+      std::vector<Block> chainFromPeer = syncChainCallback();
+      auto               chainFromFile = loadChain( "chain.json" );
+
+      if ( !chainFromPeer.empty() && ( chainFromPeer.size() - 1 > chainFromFile.size() - 1 ) )
+      {
+         std::cout << "Chain from peer was chosen to be the new chain\n";
+         newChain = std::move( chainFromPeer );
+      }
+      else
+      {
+         newChain = std::move( chainFromFile );
+         if ( !newChain.empty() )
+         {
+            std::cout << "Chain from file was choosen to be the new chain\n";
+         }
+      }
+   }
+   else
+   {
+      auto newChain = loadChain( "chain.json" );
+   }
+
+   // Making sure the chain is valid
+   if ( newChain.size() > 1 && newChain[ 0 ].prevHash == "Mojo" &&
+        isChainValid( newChain ) )
+   {
+      chain = std::move( newChain );
+      recomputeUTXOSet();
+      saveChain( "chain.json" );
+   }
+   else
+   {
+      // I will assume the genesis block is always the same
+      std::cout << "No longer chain found in peers and no chain loaded from "
+                   "file, creating new chain\n";
+      chain.push_back( createGenesisBlock() );
+   }
 }
 
 // ----------------------------------------------------------------------------
@@ -41,6 +81,32 @@ bool Blockchain::addTransaction( const Transaction& tx )
    return true;
 }
 
+// ----------------------------------------------------------------------------
+bool Blockchain::isChainValid( const std::vector<Block>& chain ) const
+{
+   for ( size_t i = 1; i < chain.size(); i++ )
+   {
+      const Block& current = chain[ i ];
+      const Block& prev    = chain[ i - 1 ];
+
+      if ( current.hash != current.calculateHash() )
+      {
+         return false;
+      }
+
+      if ( current.prevHash != prev.hash )
+      {
+         return false;
+      }
+
+      if ( !isValidPoW( current.hash, current.difficulty ) )
+      {
+         return false;
+      }
+   }
+
+   return true;
+}
 // ----------------------------------------------------------------------------
 bool Blockchain::isChainValid() const
 {
@@ -333,6 +399,10 @@ bool Blockchain::addBlock( const Block& block )
 
    chain.push_back( block );
 
+   // Now we cann add it to our json file, Bitcoin uses some kind of checkpoints
+   // but thats for later TODO: check what checkpoints are
+   saveChain( "chain.json" );
+
    return true;
 }
 
@@ -353,20 +423,20 @@ bool Blockchain::isTransactionDuplicate( const Transaction& tx ) const
 }
 
 // ----------------------------------------------------------------------------
-bool Blockchain::addToMempool( const Transaction& tx )
-{
-   if ( !isValidTransaction( tx ) )
-   {
-      std::cerr << "Transaction failed validation: " << tx.toJson().dump( 4 )
-                << std::endl;
-      return false;
-   }
-
-   std::cout << "Adding transaction to mempool: " << tx.toJson().dump( 4 )
-             << std::endl;
-   pendingTxs.push_back( tx );
-   return true;
-}
+// bool Blockchain::addToMempool( const Transaction& tx )
+//{
+//   if ( !isValidTransaction( tx ) )
+//   {
+//      std::cerr << "Transaction failed validation: " << tx.toJson().dump( 4 )
+//                << std::endl;
+//      return false;
+//   }
+//
+//   std::cout << "Adding transaction to mempool: " << tx.toJson().dump( 4 )
+//             << std::endl;
+//   pendingTxs.push_back( tx );
+//   return true;
+//}
 
 // ----------------------------------------------------------------------------
 bool Blockchain::isValidTransaction( const Transaction& tx ) const
@@ -631,4 +701,280 @@ void Blockchain::setBroadcastBlockCallback(
     std::function<void( const Block& )> callback )
 {
    broadcastBlockCallback = std::move( callback );
+}
+
+// ----------------------------------------------------------------------------
+void Blockchain::setSyncChainCallback(
+    std::function<std::vector<Block>()> callback )
+{
+   syncChainCallback = std::move( callback );
+}
+
+// ----------------------------------------------------------------------------
+void Blockchain::setGetHighestChainHeightCallback(
+    std::function<std::pair<int32_t, std::string>()> callback )
+{
+   getHighestChainHeightCallback = std::move( callback );
+}
+
+// ----------------------------------------------------------------------------
+void Blockchain::recomputeUTXOSet()
+{
+   utxoSet.clear();
+
+   for ( const auto& block : chain )
+   {
+      for ( const auto& tx : block.txs )
+      {
+         // We adding all outputs of a transaction to the utxoSet as we learned
+         // a output becomes a utxo :)
+         for ( int32_t i = 0; i < tx.outputs.size(); ++i )
+         {
+            utxoSet.push_back( { tx.txid, i, tx.outputs[ i ].amount,
+                                 tx.outputs[ i ].address } );
+         }
+
+         // We skip rewards, they have no inputs
+         if ( tx.isReward )
+         {
+            continue;
+         }
+
+         // Trying to cleanup the utxoSet by removing all spent inputs
+         for ( const auto& input : tx.inputs )
+         {
+            // Each input referenes only one utxo
+            utxoSet.erase( std::remove_if( utxoSet.begin(), utxoSet.end(),
+                                           [ & ]( const auto& utxo ) {
+                                              return utxo.txid == input.txid &&
+                                                     utxo.outputIndex ==
+                                                         input.outputIndex;
+                                           } ),
+                           utxoSet.end() );
+         }
+      }
+   }
+}
+
+// ----------------------------------------------------------------------------
+bool Blockchain::saveChain( const std::string& fileName ) const
+{
+   json j = json::array();
+   for ( const auto& block : chain )
+   {
+      j.push_back( block );
+   }
+
+   std::ofstream file( fileName );
+   if ( !file.is_open() )
+   {
+      std::cerr << "Failed to open file: " << fileName << std::endl;
+      return false;
+   }
+
+   file << std::setw( 4 ) << j << std::endl;
+   file.close();
+
+   return true;
+}
+
+// ----------------------------------------------------------------------------
+bool Blockchain::appendBlockToJson( const std::string& fileName ) const
+{
+   // Check if the file exists
+   bool fileExists = std::filesystem::exists( fileName );
+
+   std::ofstream file;
+   if ( fileExists )
+   {
+      file.open( fileName, std::ios::app );   // Open in append mode
+   }
+   else
+   {
+      file.open( fileName );   // Create new file
+   }
+
+   if ( !file.is_open() )
+   {
+      return false;
+   }
+
+   if ( !fileExists )
+   {
+      // If the file is new, write all blocks
+      for ( const auto& block : chain )
+      {
+         json j = block;
+         file << j.dump() << std::endl;
+      }
+   }
+   else
+   {
+      // Find the last block index in the file
+      int lastIndex = -1;
+      {
+         std::ifstream inFile( fileName );
+         if ( inFile.is_open() )
+         {
+            std::string line;
+
+            while ( std::getline( inFile, line ) )
+            {
+               if ( line.empty() ||
+                    line.find_first_not_of( " \t\r\n" ) == std::string::npos )
+               {
+                  continue;
+               }
+
+               try
+               {
+                  json j = json::parse( line );
+                  if ( j.contains( "index" ) )
+                  {
+                     lastIndex = j[ "index" ];
+                  }
+               }
+               catch ( const std::exception& e )
+               {
+                  // Skip invalid lines
+                  std::cerr << "Skipping invalid JSON line: " << e.what()
+                            << std::endl;
+               }
+            }
+            inFile.close();
+         }
+      }
+
+      // Append only blocks with index greater than lastIndex
+      for ( const auto& block : chain )
+      {
+         if ( block.index > lastIndex )
+         {
+            json j = block;
+            file << j.dump() << std::endl;
+         }
+      }
+   }
+
+   return true;
+}
+
+// ----------------------------------------------------------------------------
+std::vector<Block> Blockchain::loadChain( const std::string& fileName ) const
+{
+   std::vector<Block> loadedChain;
+
+   // Check if the file exists
+   if ( !std::filesystem::exists( fileName ) )
+   {
+      std::cerr << "File does not exist: " << fileName << std::endl;
+      return loadedChain;   // Return empty chain
+   }
+
+   // Check if the file is empty
+   if ( std::filesystem::file_size( fileName ) == 0 )
+   {
+      std::cerr << "File is empty: " << fileName << std::endl;
+      return loadedChain;   // Return empty chain
+   }
+
+   // Open the file
+   std::ifstream file( fileName );
+   if ( !file.is_open() )
+   {
+      std::cerr << "Failed to open file: " << fileName << std::endl;
+      return loadedChain;   // Return empty chain
+   }
+
+   try
+   {
+      // Parse the entire file as a JSON array
+      json j;
+      file >> j;
+      file.close();
+
+      // Ensure it's an array
+      if ( !j.is_array() )
+      {
+         std::cerr << "File does not contain a JSON array: " << fileName
+                   << std::endl;
+         return loadedChain;
+      }
+
+      // Convert each JSON object to a Block
+      for ( const auto& blockJson : j )
+      {
+         try
+         {
+            Block block =  blockJson;
+            loadedChain.push_back( block );
+         }
+         catch ( const json::exception& e )
+         {
+            std::cerr << "Error parsing block: " << e.what() << std::endl;
+         }
+      }
+
+      // Validate the loaded chain
+      if ( !loadedChain.empty() && !isChainValid( loadedChain ) )
+      {
+         std::cerr << "Loaded chain is invalid" << std::endl;
+         return std::vector<Block>{};
+      }
+   }
+   catch ( const json::exception& e )
+   {
+      std::cerr << "Error parsing JSON file: " << e.what() << std::endl;
+      file.close();
+      return loadedChain;
+   }
+
+   return loadedChain;
+}
+//std::vector<Block> Blockchain::loadChain( const std::string& fileName ) const
+//{
+//   std::cout << "LOADING CHAIN\n";
+//   std::ifstream file( fileName );
+//   if ( !file.is_open() )
+//   {
+//      std::cout << "EMPTY\n";
+//      return {};
+//   }
+//
+//   json j;
+//   std::cout << "BEFOR JSON CAST\n";
+//   std::vector<Block> newChain{};
+//   if ( std::filesystem::file_size( fileName ) == 0 )
+//   {
+//      std::cerr << "File is empty: " << fileName << std::endl;
+//      return newChain;
+//   }
+//   file >> j;
+//   std::string test;
+//   file >> test;
+//   std::cout << "TESTTT: " << test << std::endl;
+//   std::cout << "CHAINNNNN: " << j.dump() << std::endl;
+//
+//   for ( const auto& blockJson : j )
+//   {
+//      std::cout << "BLOCK JSON: " << blockJson.dump( 4 ) << std::endl;
+//      newChain.emplace_back( Block( blockJson ) );
+//   }
+//
+//   std::cout << "Returning from loadChain chain has size: " << newChain.size()
+//             << std::endl;
+//   return newChain;
+//}
+
+// ----------------------------------------------------------------------------
+Block Blockchain::createGenesisBlock()
+{
+   Block genesis;
+   genesis.index      = 0;
+   genesis.prevHash   = "Mojo";
+   genesis.timestamp  = getCurrentTime();
+   genesis.hash       = genesis.calculateHash();
+   genesis.difficulty = 4;
+
+   return genesis;
 }
