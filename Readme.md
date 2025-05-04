@@ -66,6 +66,11 @@ This project implements a basic blockchain system with functionalities such as t
 
 ---
 
+## Currently working on
+1. **Saving chain to json to be able to continue on server restart**
+2. **Chain synchronisation, after node goes online it should retrieve the longest chain**
+
+
 ## Future Improvements
 1. **Improve Transaction Validation**
    - Add digital signature verification for transactions using cryptographic libraries like OpenSSL or libsodium.
