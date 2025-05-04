@@ -117,3 +117,6 @@ This project implements a basic blockchain system with functionalities such as t
 ## Learning Goals
 This project is designed as a learning tool to understand the core concepts of blockchain technology. While it aims to mimic Bitcoin's functionality, it is intentionally simplified to focus on educational value.
 
+## Dependencies
+- [nlohmann/json](https://github.com/nlohmann/json): A modern C++ library for JSON parsing and serialization.
+- [yhirose/cpp-httplib](https://github.com/yhirose/cpp-httplib): A C++11 single-file header-only cross-platform HTTP/HTTPS library.
