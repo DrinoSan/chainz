@@ -15,7 +15,7 @@ find_package(OpenSSL REQUIRED)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 
 # Include directories for OpenSSL and nlohmann/json
-include_directories(${OPENSSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/json)
+include_directories(${OPENSSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
 
 # Add the executable target
 add_executable(blockchain main.cpp Block.cpp Transaction.cpp Blockchain.cpp Node.cpp UTXO.cpp Input.cpp Output.cpp)
